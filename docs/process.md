@@ -32,6 +32,11 @@ flowchart LR
   CI --> M[Maintainer<br/>squash merge]
 ```
 
+Run the whole cycle with one command: **`/task <what to do>`** or **`/task #<issue>`**.
+It creates the issue if needed, calls the agents and stops twice for the maintainer:
+after the plan, and before commit/push/PR. The table shows what happens underneath
+(and how to run any step by hand).
+
 | Step | Who | How |
 | --- | --- | --- |
 | 1. Issue | maintainer | GitHub issue with acceptance criteria, in a milestone |
@@ -57,6 +62,16 @@ agent adds an **Explain** section:
 
 And a **Maintainer actions** list for anything the agent cannot or must not do itself
 (GitHub UI settings, accounts and tokens, installing local tools).
+
+## Skills: when to use
+
+| Skill | When |
+| --- | --- |
+| `/task` | every task — the default entry point |
+| `/ponytail [lite\|full\|ultra]` | ad-hoc coding outside `/task`; on by default inside it |
+| `/ponytail-review` | quick self-check of a diff; the `reviewer` agent uses it before each PR |
+| `/ponytail-audit` | end of each milestone → `docs/audits/YYYY-MM-DD.md` |
+| `/new-adr <title>` | an architectural decision is made or changed |
 
 ## Quality gates
 

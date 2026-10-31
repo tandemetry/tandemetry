@@ -67,7 +67,7 @@ uv run mypy src
 docker compose -f deploy/docker-compose.yml up -d   # local stack
 ```
 
-(Commands become valid as the skeleton lands in PR #2.)
+(Commands become valid once the project skeleton lands.)
 
 ## Conventions
 
@@ -79,6 +79,9 @@ docker compose -f deploy/docker-compose.yml up -d   # local stack
 - New architectural decision → add an ADR in `docs/adr/`.
 
 ## How we work (details in `docs/process.md`)
+
+Default entry point: **`/task <what to do>`** or **`/task #<issue>`** — runs the steps below
+and stops for the maintainer's approval after the plan and before commit/push/PR.
 
 1. **Plan:** non-trivial task → `planner` agent turns the issue into a plan → maintainer approves.
 2. **Implement:** `ponytail` mode (smallest complete change) + tests for non-trivial logic.
@@ -99,6 +102,7 @@ docker compose -f deploy/docker-compose.yml up -d   # local stack
 
 | Tool | Use |
 | --- | --- |
+| `/task <what> \| #<n>` | full cycle: issue → plan → approve → code → review → PR |
 | `planner` agent | plan an issue (read-only) |
 | `reviewer` agent | independent pre-PR review (read-only) |
 | `/ponytail [lite\|full\|ultra]` | coding mode (default: full) |
