@@ -1,6 +1,8 @@
 ## What
 
-<!-- What does this PR change? Link the issue: Closes #… -->
+<!-- What does this PR change? -->
+
+Closes #
 
 ## Why
 
@@ -9,8 +11,11 @@
 - [ ] `uv run pytest`
 - [ ] `uv run ruff check . && uv run mypy src`
 
-## Checklist
+## Process checklist
 
-- [ ] Tests added/updated
-- [ ] Docs/ADR updated if behaviour or architecture changed
+- [ ] Plan approved on the issue (non-trivial changes)
+- [ ] `reviewer` agent verdict: Ship (or findings addressed)
+- [ ] Tests added/updated for non-trivial logic
+- [ ] Docs / ADR updated if behaviour or architecture changed
+- [ ] I can explain every line in this PR
 - [ ] No secrets, no customer data in fixtures

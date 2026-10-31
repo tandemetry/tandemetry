@@ -13,7 +13,8 @@ review load and cost per merged PR.
 - Architecture: `docs/architecture.md`
 - Agent attribution rules: `docs/attribution.md`
 - Roadmap: `docs/roadmap.md`
-- Decisions: `docs/adr/` — do not propose alternatives to accepted ADRs without saying so explicitly.
+- Decisions: `docs/adr/` — accepted ADRs define scope (see rule 6).
+- Development process: `docs/process.md` — follow it for every task.
 
 ## Hard rules
 
@@ -24,6 +25,10 @@ review load and cost per merged PR.
    except GitHub API and explicitly configured exporters.
 4. **Every change ships with tests.** No merge with failing CI.
 5. **Read-only GitHub permissions.** The GitHub App never writes to customer repos.
+6. **Accepted ADRs define scope.** Kafka, ClickHouse, PostgreSQL, Kubernetes, KEDA and
+   OpenTelemetry are deliberate choices. Minimalism (ponytail) applies inside them, never
+   against them. To challenge one, propose a new ADR (`/new-adr`).
+7. **Agents never merge, force-push or commit to `main`.** The maintainer merges.
 
 ## Stack
 
@@ -73,9 +78,32 @@ docker compose -f deploy/docker-compose.yml up -d   # local stack
 - Kafka consumers must be idempotent (events carry a stable `event_id`).
 - New architectural decision → add an ADR in `docs/adr/`.
 
-## Working agreement (human + agent)
+## How we work (details in `docs/process.md`)
 
-- Start non-trivial tasks in plan mode: read the issue and relevant docs, propose a plan, wait for approval.
-- The maintainer writes the core learning areas himself (Kafka consumers, attribution rules,
-  ClickHouse SQL, KEDA/OTel config); the agent scaffolds, writes tests, reviews and documents.
+1. **Plan:** non-trivial task → `planner` agent turns the issue into a plan → maintainer approves.
+2. **Implement:** `ponytail` mode (smallest complete change) + tests for non-trivial logic.
+3. **Review:** `reviewer` agent (uses `ponytail-review`) before every PR → fix Must/Should findings.
+4. **PR → CI → maintainer squash-merges.**
+5. **Milestone end:** `ponytail-audit` → save to `docs/audits/YYYY-MM-DD.md`.
+
+- Agents write the code. When a change touches technology new to the maintainer
+  (Kafka, ClickHouse, Kubernetes/Helm, KEDA, OpenTelemetry, Prometheus/Grafana), add an
+  **Explain** section to the reply: what was configured, why, how it works, how to verify it
+  locally (exact commands), and common pitfalls.
+- List **Maintainer actions** explicitly: anything the agent cannot or must not do (UI settings
+  on GitHub, accounts/tokens, installing local tools, approving a ruleset change).
 - Keep PRs small (< ~400 changed lines where possible).
+- Keep the `Co-Authored-By` trailer on agent-assisted commits (we dogfood attribution).
+
+## Claude Code setup
+
+| Tool | Use |
+| --- | --- |
+| `planner` agent | plan an issue (read-only) |
+| `reviewer` agent | independent pre-PR review (read-only) |
+| `/ponytail [lite\|full\|ultra]` | coding mode (default: full) |
+| `/ponytail-review` | review a change |
+| `/ponytail-audit` | audit the repo |
+| `/new-adr <title>` | record an architectural decision |
+
+Permissions: `.claude/settings.json`. Personal overrides: `.claude/settings.local.json`.
