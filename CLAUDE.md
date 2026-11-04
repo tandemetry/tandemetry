@@ -113,6 +113,7 @@ and stops for the maintainer's approval after the plan and before commit/push/PR
   on GitHub, accounts/tokens, installing local tools, approving a ruleset change).
 - Keep PRs small (< ~400 changed lines where possible).
 - Keep the `Co-Authored-By` trailer on agent-assisted commits (we dogfood attribution).
+- Do not add "Generated with Claude Code" lines to PR descriptions; the commit trailer is enough.
 
 ## Claude Code setup
 
