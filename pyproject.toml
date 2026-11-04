@@ -1,0 +1,44 @@
+[project]
+name = "tandemetry"
+version = "0.1.0"
+description = "Self-hosted analytics for AI coding agents versus human-authored work."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.13"
+dependencies = [
+    "pydantic-settings>=2.6",
+]
+
+[project.scripts]
+tandemetry = "tandemetry.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.9.4,<0.10"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.13",
+    "pre-commit>=4.0",
+    "pytest>=8.3",
+    "ruff>=0.8",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "N", "ANN", "S", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
+plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"

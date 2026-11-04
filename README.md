@@ -32,3 +32,18 @@ that from your own Git data, without sending code anywhere and without LLM calls
 ## License
 
 [Apache-2.0](LICENSE)
+
+## Development
+
+Requires [uv](https://docs.astral.sh/uv/).
+
+```bash
+uv sync
+uv run pre-commit install
+uv run pytest
+uv run ruff check . && uv run ruff format --check .
+uv run mypy
+uv run tandemetry --version
+```
+
+The local service stack (Kafka, ClickHouse, PostgreSQL) arrives in a later release.

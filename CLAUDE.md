@@ -63,11 +63,9 @@ docs/
 uv sync                       # install deps
 uv run pytest                 # tests
 uv run ruff check . && uv run ruff format --check .
-uv run mypy src
-docker compose -f deploy/docker-compose.yml up -d   # local stack
+uv run mypy
+docker compose -f deploy/docker-compose.yml up -d   # local stack (not available yet)
 ```
-
-(Commands become valid once the project skeleton lands.)
 
 ## Conventions
 
