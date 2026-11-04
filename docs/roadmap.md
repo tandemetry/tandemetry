@@ -3,7 +3,8 @@
 ## Week 1 (Nov 1–7): validation & skeleton
 - [ ] Run Apache DevLake and Middleware; document gaps for agent analytics
 - [ ] Collect agent PRs from ~20 popular repos via GitHub API; draft signatures catalog
-- [ ] Project skeleton: uv, ruff, mypy, pytest, pre-commit (gitleaks), CI, docker compose
+- [x] Project skeleton: uv, ruff, mypy, pytest, pre-commit (gitleaks), CI (#6)
+- [ ] Docker compose: Kafka (KRaft), ClickHouse, PostgreSQL
 - [ ] README with product promise and dashboard mockup
 - [ ] Publish `tandemetry` 0.0.1 to PyPI (minimal working CLI)
 
