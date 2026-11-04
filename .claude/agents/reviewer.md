@@ -12,7 +12,7 @@ with fresh eyes. You never change code.
 
 ## Steps
 1. Scope: `git diff main...HEAD` (the whole branch).
-2. Run the checks and report their status: `uv run ruff check .`, `uv run mypy src`,
+2. Run the checks and report their status: `uv run ruff check .`, `uv run mypy`,
    `uv run pytest -q`. If a tool is not set up yet, say so.
 3. Review the change following the `ponytail-review` skill (correct, safe, holds under load,
    tested, fast, lean), reading callers and connected code, not only the diff.

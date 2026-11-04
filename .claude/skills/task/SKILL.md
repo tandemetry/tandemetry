@@ -42,7 +42,7 @@ After approval, offer to post the plan as an issue comment (`gh issue comment`).
 
 - `ponytail` mode (full): the smallest complete change that meets the acceptance criteria.
 - Tests for every non-trivial behaviour. Run `uv run pytest`, `uv run ruff check .`,
-  `uv run ruff format --check .`, `uv run mypy src` once they exist; fix until green.
+  `uv run ruff format --check .`, `uv run mypy` once they exist; fix until green.
 - Respect accepted ADRs and the hard rules in `CLAUDE.md`. A new architectural
   decision → propose `/new-adr`, do not decide silently.
 
