@@ -78,6 +78,22 @@ docker compose -f deploy/docker-compose.yml up -d   # local stack
 - Kafka consumers must be idempotent (events carry a stable `event_id`).
 - New architectural decision → add an ADR in `docs/adr/`.
 
+## Code quality standards
+
+This repository is the maintainer's public showcase: production-grade from the first commit.
+
+- Object-oriented design with clear responsibilities (SOLID); small classes and functions.
+- Dependency injection via constructors and FastAPI `Depends`. Depend on abstractions
+  (`Protocol`/ABC) at module boundaries; no hidden globals or module-level singletons.
+- Layered structure: domain logic has no I/O; adapters (Kafka, ClickHouse, Postgres, GitHub)
+  implement ports defined by the domain.
+- No code comments. Names and structure carry the meaning.
+- Docstrings only on public APIs, one line, stating what and not how. Never restate the signature.
+- No dead code, speculative abstractions or premature patterns (ponytail still applies):
+  introduce a pattern when it removes real duplication or coupling.
+- Configuration through typed `pydantic-settings`; no magic constants inline.
+- Tests mirror the `src/` layout, use fakes over mocks where possible, and assert behaviour.
+
 ## How we work (details in `docs/process.md`)
 
 Default entry point: **`/task <what to do>`** or **`/task #<issue>`** — runs the steps below
@@ -97,6 +113,7 @@ and stops for the maintainer's approval after the plan and before commit/push/PR
   on GitHub, accounts/tokens, installing local tools, approving a ruleset change).
 - Keep PRs small (< ~400 changed lines where possible).
 - Keep the `Co-Authored-By` trailer on agent-assisted commits (we dogfood attribution).
+- Do not add "Generated with Claude Code" lines to PR descriptions; the commit trailer is enough.
 
 ## Claude Code setup
 
