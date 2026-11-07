@@ -15,7 +15,7 @@ that from your own Git data, without sending code anywhere and without LLM calls
 
 ## What you will see
 
-![Dashboard mockup with illustrative data](docs/assets/dashboard-mockup.svg)
+![Dashboard mockup with illustrative data](https://raw.githubusercontent.com/tandemetry/tandemetry/main/docs/assets/dashboard-mockup.svg)
 
 Every number is traceable: each PR is labelled `agent`, `human` or `mixed` by a transparent rule
 (bot author, commit trailer, PR description, branch name), and the matched rule is stored with the
@@ -42,6 +42,7 @@ configuration. Details: [architecture](docs/architecture.md).
 - [Architecture](docs/architecture.md)
 - [Agent attribution](docs/attribution.md)
 - [Roadmap](docs/roadmap.md)
+- [Releasing](docs/releasing.md)
 - [Architecture decisions](docs/adr/)
 
 ## License
