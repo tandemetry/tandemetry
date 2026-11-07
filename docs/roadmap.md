@@ -1,14 +1,15 @@
 # Roadmap
 
 ## Week 1 (Nov 1–7): validation & skeleton
-- [ ] Run Apache DevLake and Middleware; document gaps for agent analytics
 - [x] Collect agent PRs from 22 popular repos via GitHub API; signatures catalog (#9)
 - [x] Project skeleton: uv, ruff, mypy, pytest, pre-commit (gitleaks), CI (#6)
 - [x] Docker compose: Kafka (KRaft), ClickHouse, PostgreSQL (#12)
 - [x] README with product promise and dashboard mockup
-- [ ] Publish `tandemetry` 0.0.1 to PyPI (minimal working CLI)
+- [x] Publish `tandemetry` 0.0.1 to PyPI (minimal working CLI) (#15)
 
 ## Week 2 (Nov 8–14): ingestion
+- [ ] Run Apache DevLake and Middleware; document gaps for agent analytics (moved from week 1;
+  second half of the Nov 7 kill/continue criterion)
 - [ ] GitHub App manifest (read-only) + webhook receiver with signature verification
 - [ ] Dockerfile and application services in `deploy/docker-compose.yml` (profile `app`)
 - [ ] Unified event model

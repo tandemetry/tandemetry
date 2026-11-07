@@ -47,7 +47,11 @@ configuration. Details: [architecture](docs/architecture.md).
 
 ## License
 
-[Apache-2.0](LICENSE)
+[Apache-2.0](LICENSE). Copyright 2026 Yevhenii Korniev.
+
+## Author
+
+Created and maintained by [Yevhenii Korniev](https://github.com/Korniev).
 
 ## Development
 
