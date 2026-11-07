@@ -1,0 +1,735 @@
+{
+  "repos": {
+    "microsoft/vscode": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": [
+        {
+          "kind": "commit_trailer",
+          "value": "Copilot <223556219+Copilot@users.noreply.github.com>",
+          "count": 194,
+          "examples": [
+            "https://github.com/microsoft/vscode/commit/10e411b6acd8d15f32e870e740dcc42f93a7f15f",
+            "https://github.com/microsoft/vscode/commit/6531648f5ace8b77ae799262bdc97bf048461938",
+            "https://github.com/microsoft/vscode/commit/6531648f5ace8b77ae799262bdc97bf048461938"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Copilot App <223556219+Copilot@users.noreply.github.com>",
+          "count": 6,
+          "examples": [
+            "https://github.com/microsoft/vscode/commit/3ee96c76ee5de933f1dcefe4b98f3bcdb1e0c7e7",
+            "https://github.com/microsoft/vscode/commit/3ee96c76ee5de933f1dcefe4b98f3bcdb1e0c7e7",
+            "https://github.com/microsoft/vscode/commit/3ee96c76ee5de933f1dcefe4b98f3bcdb1e0c7e7"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+          "count": 2,
+          "examples": [
+            "https://github.com/microsoft/vscode/commit/58f5c3a6167cf1a2506b9497907b092dc44fea63",
+            "https://github.com/microsoft/vscode/commit/b7cccf54c553f5b39b6ac9e13a2478f9e5666c69"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>",
+          "count": 2,
+          "examples": [
+            "https://github.com/microsoft/vscode/commit/dc999c8855d92d92b3f6222929e53a533dfd0cb6",
+            "https://github.com/microsoft/vscode/commit/dc999c8855d92d92b3f6222929e53a533dfd0cb6"
+          ]
+        }
+      ]
+    },
+    "microsoft/TypeScript": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": [
+        {
+          "kind": "commit_trailer",
+          "value": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+          "count": 9,
+          "examples": [
+            "https://github.com/microsoft/TypeScript/commit/c1181741ae6ecbfe0f7588aa2e4f013dc23ccaaa",
+            "https://github.com/microsoft/TypeScript/commit/8d35aa9d60e1d8d533acffe0e055f0613731f970",
+            "https://github.com/microsoft/TypeScript/commit/c46bcd6089ea2e5e84e7fcc60845ac884a5b0ac1"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Copilot App <223556219+Copilot@users.noreply.github.com>",
+          "count": 2,
+          "examples": [
+            "https://github.com/microsoft/TypeScript/commit/7502ae1a2d6a8252b3a2fe43332d2342239703d0",
+            "https://github.com/microsoft/TypeScript/commit/e3d38775689caae56080cc74d6c77949aeb91dfb"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Copilot <223556219+Copilot@users.noreply.github.com>",
+          "count": 2,
+          "examples": [
+            "https://github.com/microsoft/TypeScript/commit/9973e1c8b56be659acf92d6dde43538866b35d14",
+            "https://github.com/microsoft/TypeScript/commit/996ab71760ec39ab03b989591ad09d291d2758ef"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/microsoft/TypeScript/commit/fdcfaff94d2127f06c24445dd1cadb98b3741695"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Opus 5.5 <noreply@anthropic.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/microsoft/TypeScript/commit/61e5bd8c468b1fef04e63079478b52a09cd2e29f"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Cursor <cursoragent@cursor.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/microsoft/TypeScript/commit/e4b2d9af2fe098367dc2101f420835f8c0d3a048"
+          ]
+        }
+      ]
+    },
+    "microsoft/playwright": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": []
+    },
+    "dotnet/runtime": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": [
+        {
+          "kind": "commit_trailer",
+          "value": "Copilot <223556219+Copilot@users.noreply.github.com>",
+          "count": 28,
+          "examples": [
+            "https://github.com/dotnet/runtime/commit/5ccf61b704d6b431e18eb8171ed593c41d591926",
+            "https://github.com/dotnet/runtime/commit/7066044546b54c4a84bd88a84d52bab5f09e603a",
+            "https://github.com/dotnet/runtime/commit/a2dd4f7a0a8ace030ff45d9e7fdeb790f9e0cdd0"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Copilot App <223556219+Copilot@users.noreply.github.com>",
+          "count": 27,
+          "examples": [
+            "https://github.com/dotnet/runtime/commit/59e1f8f3a9501c931f6e0dbd41e8956506f3fd44",
+            "https://github.com/dotnet/runtime/commit/cc9272b0ad1d3cc93202055a22809f230f0cc85c",
+            "https://github.com/dotnet/runtime/commit/17768b729cb6899239309e6557de216ccd7a6b9e"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+          "count": 9,
+          "examples": [
+            "https://github.com/dotnet/runtime/commit/681cd3ab4a890b769df4e3f039e04a004afe61ac",
+            "https://github.com/dotnet/runtime/commit/e1d7f344ef40c77a9379c9aa9c2cf9edafd30e43",
+            "https://github.com/dotnet/runtime/commit/5c9948247812578c26fa7255ec78387bb3be3d20"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Opus 5.5 <noreply@anthropic.com>",
+          "count": 3,
+          "examples": [
+            "https://github.com/dotnet/runtime/commit/ebc34682a90b1fb9f718df8c2b0aa2f8b7f2543d",
+            "https://github.com/dotnet/runtime/commit/0894f48862a63643bc32f8c137f207b6d9b53c17",
+            "https://github.com/dotnet/runtime/commit/f55fa833cbf1824ebaea39346c7d25360a43e723"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>",
+          "count": 2,
+          "examples": [
+            "https://github.com/dotnet/runtime/commit/681cd3ab4a890b769df4e3f039e04a004afe61ac",
+            "https://github.com/dotnet/runtime/commit/6db9c9d57ab4270db4b2e9b94bc1ee27d1aa7259"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Cursor <cursoragent@cursor.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/dotnet/runtime/commit/ae9093f11e69de3f41a3b853e4119e49999f9acb"
+          ]
+        }
+      ]
+    },
+    "dotnet/aspnetcore": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": [
+        {
+          "kind": "commit_trailer",
+          "value": "Copilot App <223556219+Copilot@users.noreply.github.com>",
+          "count": 92,
+          "examples": [
+            "https://github.com/dotnet/aspnetcore/commit/0f432471390b0e3b3f9f9f44fd4de836e7785837",
+            "https://github.com/dotnet/aspnetcore/commit/0f432471390b0e3b3f9f9f44fd4de836e7785837",
+            "https://github.com/dotnet/aspnetcore/commit/f19828ce8c3cdbe18bfda1ee79855830631ba10c"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Copilot <223556219+Copilot@users.noreply.github.com>",
+          "count": 80,
+          "examples": [
+            "https://github.com/dotnet/aspnetcore/commit/7816523a20ca03e144293a516bcfa61d20478361",
+            "https://github.com/dotnet/aspnetcore/commit/7816523a20ca03e144293a516bcfa61d20478361",
+            "https://github.com/dotnet/aspnetcore/commit/7816523a20ca03e144293a516bcfa61d20478361"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>",
+          "count": 2,
+          "examples": [
+            "https://github.com/dotnet/aspnetcore/commit/9593835d7691f5bddc459bd76f54781574ed3dea",
+            "https://github.com/dotnet/aspnetcore/commit/9593835d7691f5bddc459bd76f54781574ed3dea"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Copilot App <223556219+copilot@users.noreply.github.com>",
+          "count": 2,
+          "examples": [
+            "https://github.com/dotnet/aspnetcore/commit/ca7f6f3ffa5947a42939147890049ff5194c452c",
+            "https://github.com/dotnet/aspnetcore/commit/ca7f6f3ffa5947a42939147890049ff5194c452c"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "copilot-swe-agent[bot] <198982749+Copilot@users.noreply.github.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/dotnet/aspnetcore/commit/e644b0c25f8862a067c2fb132182aacf8d671837"
+          ]
+        }
+      ]
+    },
+    "vercel/next.js": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": [
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Opus 5.5 <noreply@anthropic.com>",
+          "count": 6,
+          "examples": [
+            "https://github.com/vercel/next.js/commit/9c39e0421fec5e38866ac5346df22b0ba8043baf",
+            "https://github.com/vercel/next.js/commit/5e94558853f41fb45949af61646c01872d7c6bef",
+            "https://github.com/vercel/next.js/commit/fa8a15d911069cd894f2c4879f83fc437dcea19d"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Code (kimi-k3) <noreply@anthropic.com>",
+          "count": 2,
+          "examples": [
+            "https://github.com/vercel/next.js/commit/a117a672ede39bc7b8843101552a6e0d760d25b6",
+            "https://github.com/vercel/next.js/commit/8fbd7396d862114947e4fe57fd1b5337915e9423"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude <noreply@anthropic.com>",
+          "count": 2,
+          "examples": [
+            "https://github.com/vercel/next.js/commit/43381ce4ff05755f8a77463055d645742c384395",
+            "https://github.com/vercel/next.js/commit/01b479c8eb95fb43f1770381cdb8cdd65b94344f"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Code (claude-opus-5) <noreply@anthropic.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/vercel/next.js/commit/b19370e67cea62c5868ee64129a86db4e447c087"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Code <noreply@anthropic.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/vercel/next.js/commit/84f799446cb1037a5be257caaa7eebe370d57bf4"
+          ]
+        }
+      ]
+    },
+    "facebook/react": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": [
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Code (kimi-k3[1m]) <noreply@anthropic.com>",
+          "count": 3,
+          "examples": [
+            "https://github.com/react/react/commit/0c9913ae87283f96e868a8f1c20a3389827632d0",
+            "https://github.com/react/react/commit/084f5f2457c90b88fedf04ccc8aabebfa988fad1",
+            "https://github.com/react/react/commit/0209ef8a77bcf423cb31029e050a0722a71ebd03"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "count": 2,
+          "examples": [
+            "https://github.com/react/react/commit/9ca7a2713e2602dd5b75bd3f74024d5fc93d2116",
+            "https://github.com/react/react/commit/a6b912fbe77f698ad43c922f206db0d4f4ad7485"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Cursor <cursoragent@cursor.com>",
+          "count": 2,
+          "examples": [
+            "https://github.com/react/react/commit/019019be403c3269e15b8d7ebefb57d30f84086b",
+            "https://github.com/react/react/commit/0209ef8a77bcf423cb31029e050a0722a71ebd03"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Code (claude-code/openai/gpt-6-astra) <noreply@anthropic.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/react/react/commit/64df855d338232201efcbbc55cf3e1bf98ad67af"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Code <noreply@anthropic.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/react/react/commit/ab0d927f53f6e1b5dcfc2c4e9fc438bdb5ffb678"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Codex <noreply@openai.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/react/react/commit/6e9c55c3a24f8b981c2883c2bb99b0aaf0e7d782"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Sonnet 5 <noreply@anthropic.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/react/react/commit/b6da52273c9822d516591d6cd83a27c0f79791a0"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Fable 5.1 <noreply@anthropic.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/react/react/commit/564923c8e59b7e903a1e432bbcb9105c33455767"
+          ]
+        }
+      ]
+    },
+    "denoland/deno": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": []
+    },
+    "oven-sh/bun": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": [
+        {
+          "kind": "commit_trailer",
+          "value": "Claude <noreply@anthropic.com>",
+          "count": 48,
+          "examples": [
+            "https://github.com/oven-sh/bun/commit/b1007f1177fd402fae67387b8548cae5ae9b5707",
+            "https://github.com/oven-sh/bun/commit/e57d89ba63a7504957faa2ccc8f416ce2fb15453",
+            "https://github.com/oven-sh/bun/commit/05a0ec93a614b69389ed2593463f6b08e697391e"
+          ]
+        }
+      ]
+    },
+    "astral-sh/ruff": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": [
+        {
+          "kind": "commit_trailer",
+          "value": "Codex <codex@openai.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/astral-sh/ruff/commit/6f86f83bf58cbf80af51536c4b4e9de8697af177"
+          ]
+        }
+      ]
+    },
+    "astral-sh/uv": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": []
+    },
+    "python/cpython": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": [
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Opus 5.5 <noreply@anthropic.com>",
+          "count": 14,
+          "examples": [
+            "https://github.com/python/cpython/commit/5106b9195fefa8eb954741661c7b3362e20f0953",
+            "https://github.com/python/cpython/commit/d900c8f9aa7e71cca78536845340b19f9706e871",
+            "https://github.com/python/cpython/commit/f88565bcd00ac258379c4b0d381d5580a40ac8a7"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Fable 5.1 <noreply@anthropic.com>",
+          "count": 2,
+          "examples": [
+            "https://github.com/python/cpython/commit/3feccd170e647b00141b61742a61ae3a0651d527",
+            "https://github.com/python/cpython/commit/3feccd170e647b00141b61742a61ae3a0651d527"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Opus 4.8 <noreply@anthropic.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/python/cpython/commit/25181cee14359a0fbdbe54c83ab3ac44147d22ed"
+          ]
+        }
+      ]
+    },
+    "rust-lang/rust": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": []
+    },
+    "golang/go": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": []
+    },
+    "pytorch/pytorch": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": [
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Opus 5.5 <noreply@anthropic.com>",
+          "count": 12,
+          "examples": [
+            "https://github.com/pytorch/pytorch/commit/b6472a3213ece0e4a2772ff4c35cef87bb801b69",
+            "https://github.com/pytorch/pytorch/commit/a8fa9de535b3d63ce048f65d328904ae9ab3c883",
+            "https://github.com/pytorch/pytorch/commit/4d6bffb166fc8f21de36c4a740970e60090a1ac2"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Code <noreply@anthropic.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/pytorch/pytorch/commit/d5529ae413ca65241b6aa0a3008e6fd1e40acd12"
+          ]
+        }
+      ]
+    },
+    "huggingface/transformers": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": [
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Opus 5.5 <noreply@anthropic.com>",
+          "count": 83,
+          "examples": [
+            "https://github.com/huggingface/transformers/commit/04b0d424b93a18002c67836bbdb623c4b54fcb18",
+            "https://github.com/huggingface/transformers/commit/92b21f8daa4b226821ab9aa5774f4b4887af0225",
+            "https://github.com/huggingface/transformers/commit/92b21f8daa4b226821ab9aa5774f4b4887af0225"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Sonnet 4.6 <noreply@anthropic.com>",
+          "count": 66,
+          "examples": [
+            "https://github.com/huggingface/transformers/commit/826edb70cd5b7b4e5b8b66f396f90b88898fdec1",
+            "https://github.com/huggingface/transformers/commit/826edb70cd5b7b4e5b8b66f396f90b88898fdec1",
+            "https://github.com/huggingface/transformers/commit/826edb70cd5b7b4e5b8b66f396f90b88898fdec1"
+          ]
+        }
+      ]
+    },
+    "langchain-ai/langchain": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": [
+        {
+          "kind": "commit_trailer",
+          "value": "open-swe[bot] <open-swe@users.noreply.github.com>",
+          "count": 20,
+          "examples": [
+            "https://github.com/langchain-ai/langchain/commit/ce7d094fe0ed437036f1226f7ff8b4ba390efc74",
+            "https://github.com/langchain-ai/langchain/commit/e8660c952eefbbe8a8656c062de7b92bb866b68b",
+            "https://github.com/langchain-ai/langchain/commit/d3b3a8da1e06a100cb68a0e81e1e4be908995e59"
+          ]
+        }
+      ]
+    },
+    "home-assistant/core": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": [
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Opus 5.5 <noreply@anthropic.com>",
+          "count": 9,
+          "examples": [
+            "https://github.com/home-assistant/core/commit/5c60a99291a9fadf2b78fd59c5972d3e86e2e9d3",
+            "https://github.com/home-assistant/core/commit/857ae8695f60caeb60f92bd463e7604fa51b8ee3",
+            "https://github.com/home-assistant/core/commit/2e17220135de913f1d16e528b7a16c10af47519d"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude <noreply@anthropic.com>",
+          "count": 8,
+          "examples": [
+            "https://github.com/home-assistant/core/commit/28b7944b5c8d683344888c58b1923c5ba76bd48b",
+            "https://github.com/home-assistant/core/commit/30c0632d19295c4f0c17c13334e4e98a35c79574",
+            "https://github.com/home-assistant/core/commit/405effcf666bb511550eee58ca889503463d87bf"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Cursor <cursoragent@cursor.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/home-assistant/core/commit/ddfa0e29c0ce3821c6d550836c1336e96842ec03"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Copilot <223556219+Copilot@users.noreply.github.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/home-assistant/core/commit/259c7d1da9e64e03d4bb313698c9581c5ae5d53e"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/home-assistant/core/commit/7dcad72875933ea79e8f704c4e1cc952ce953cf8"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Copilot Autofix powered by AI <175728472+Copilot@users.noreply.github.com>",
+          "count": 1,
+          "examples": [
+            "https://github.com/home-assistant/core/commit/a907282259a77467fb0695918203bbe27fd42796"
+          ]
+        }
+      ]
+    },
+    "ollama/ollama": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": []
+    },
+    "openai/codex": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": []
+    },
+    "google-gemini/gemini-cli": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": [
+        {
+          "kind": "commit_trailer",
+          "value": "gemini-cli-robot <224641728+gemini-cli-robot@users.noreply.github.com>",
+          "count": 6,
+          "examples": [
+            "https://github.com/google-gemini/gemini-cli/commit/2d7969ac115155ef99a5b7883c3288c04fdb6b2f",
+            "https://github.com/google-gemini/gemini-cli/commit/dbb99c64af0db08573cbd42da82799b386451660",
+            "https://github.com/google-gemini/gemini-cli/commit/fa5c17365754a4936c3b97429df798966305267d"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "gemini-code-assist[bot] <176961590+gemini-code-assist[bot]@users.noreply.github.com>",
+          "count": 3,
+          "examples": [
+            "https://github.com/google-gemini/gemini-cli/commit/0ac57c029b848d109eef940afe0db4b5a0c3dad0",
+            "https://github.com/google-gemini/gemini-cli/commit/b04bbf25e566c014bd5b29212d978c9f74b55ddd",
+            "https://github.com/google-gemini/gemini-cli/commit/21976e977ef833e9a03538119eac933fe89767a7"
+          ]
+        }
+      ]
+    },
+    "anthropics/claude-code": {
+      "prs_reviewed": 100,
+      "commits_reviewed": 100,
+      "signals": [
+        {
+          "kind": "description_phrase",
+          "value": "🤖 generated with [claude code](https://claude.ai/code)",
+          "count": 39,
+          "examples": [
+            "https://github.com/anthropics/claude-code/pull/280",
+            "https://github.com/anthropics/claude-code/pull/383",
+            "https://github.com/anthropics/claude-code/pull/794"
+          ]
+        },
+        {
+          "kind": "commit_trailer",
+          "value": "Claude <noreply@anthropic.com>",
+          "count": 3,
+          "examples": [
+            "https://github.com/anthropics/claude-code/commit/90380efca7f9d73e206fac453f841b6acd664f4d",
+            "https://github.com/anthropics/claude-code/commit/90380efca7f9d73e206fac453f841b6acd664f4d",
+            "https://github.com/anthropics/claude-code/commit/90380efca7f9d73e206fac453f841b6acd664f4d"
+          ]
+        },
+        {
+          "kind": "description_phrase",
+          "value": "co-authored-by: claude <noreply@anthropic.com>",
+          "count": 2,
+          "examples": [
+            "https://github.com/anthropics/claude-code/pull/448",
+            "https://github.com/anthropics/claude-code/pull/5853"
+          ]
+        }
+      ]
+    }
+  },
+  "global_search_totals": {
+    "author:app/copilot-swe-agent": {
+      "total_count": 2145004,
+      "sampled": 30,
+      "bot_authors_in_sample": {
+        "Copilot": 30
+      },
+      "examples": [
+        "https://github.com/filippo-mazza/financial_simulator/pull/134",
+        "https://github.com/v-berlin/companion-module-allenheath-qu/pull/1",
+        "https://github.com/nikolausnold/NIKNOLIG-Monorepo/pull/196"
+      ]
+    },
+    "author:app/devin-ai-integration": {
+      "total_count": 332854,
+      "sampled": 30,
+      "bot_authors_in_sample": {
+        "devin-ai-integration[bot]": 30
+      },
+      "examples": [
+        "https://github.com/good2better/g2b-winkel/pull/526",
+        "https://github.com/fmflex/devin4discord/pull/44",
+        "https://github.com/wangfamaimar/MCP-STEM/pull/53"
+      ]
+    },
+    "author:app/cursor": {
+      "total_count": 186694,
+      "sampled": 30,
+      "bot_authors_in_sample": {
+        "cursor[bot]": 30
+      },
+      "examples": [
+        "https://github.com/RAWCoder123/Mise/pull/1160",
+        "https://github.com/estsan3/ventas360-api/pull/35",
+        "https://github.com/Apple-Federal-Credit-Union/vllm/pull/66"
+      ]
+    },
+    "author:app/google-labs-jules": {
+      "total_count": 337605,
+      "sampled": 30,
+      "bot_authors_in_sample": {
+        "google-labs-jules[bot]": 30
+      },
+      "examples": [
+        "https://github.com/Jokersochi/-/pull/226",
+        "https://github.com/bjohnson1279/python-ddd-inventory/pull/216",
+        "https://github.com/Jokersochi/russian-monopoly-local/pull/544"
+      ]
+    },
+    "head:codex/": {
+      "total_count": 8884324,
+      "sampled": 30,
+      "bot_authors_in_sample": {},
+      "examples": [
+        "https://github.com/marinelj/finance-app/pull/13",
+        "https://github.com/SUaDtL/singedTerra/pull/551",
+        "https://github.com/Railsimulatornet/VeyonAutoupdateforWindows/pull/8"
+      ]
+    },
+    "head:claude/": {
+      "total_count": 9772191,
+      "sampled": 30,
+      "bot_authors_in_sample": {},
+      "examples": [
+        "https://github.com/ISRAEL-DUFF/taskiem/pull/172",
+        "https://github.com/MauricioSUprir/jogo-futebol/pull/636",
+        "https://github.com/aknkakykhk-maker/monhero/pull/4831"
+      ]
+    },
+    "head:cursor/": {
+      "total_count": 1939216,
+      "sampled": 30,
+      "bot_authors_in_sample": {
+        "verity-agents[bot]": 1,
+        "cursor[bot]": 2
+      },
+      "examples": [
+        "https://github.com/squirelworks/Graal_analysis/pull/278",
+        "https://github.com/hypertask-ai/hypertask/pull/3020",
+        "https://github.com/ordadush94/snacksmate-web-v2/pull/63"
+      ]
+    },
+    "body:Generated with Claude Code": {
+      "total_count": 22274331,
+      "sampled": 30,
+      "bot_authors_in_sample": {
+        "openshift-trt-agent[bot]": 1
+      },
+      "examples": [
+        "https://github.com/openshift-trt/sippy-eval/pull/431",
+        "https://github.com/iantybo/fifteen-thirty-one-go/pull/151",
+        "https://github.com/cmengu/Interesting-projs/pull/1"
+      ]
+    },
+    "body:Co-Authored-By Claude": {
+      "total_count": 518228,
+      "sampled": 30,
+      "bot_authors_in_sample": {
+        "renovate[bot]": 7
+      },
+      "examples": [
+        "https://github.com/NoStackApp/hub-launch/pull/90",
+        "https://github.com/brettinternet/homelab/pull/113",
+        "https://github.com/Panzer1119/homelab-docker/pull/301"
+      ]
+    }
+  }
+}
