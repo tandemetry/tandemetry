@@ -1,14 +1,29 @@
 [project]
 name = "tandemetry"
-version = "0.1.0"
+version = "0.0.1"
 description = "Self-hosted analytics for AI coding agents versus human-authored work."
 readme = "README.md"
 license = "Apache-2.0"
+authors = [{ name = "Yevhenii Korniev" }]
+keywords = ["ai-agents", "analytics", "github", "code-review", "engineering-metrics"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development",
+]
 requires-python = ">=3.13"
 dependencies = [
     "pydantic-settings>=2.6",
     "pyyaml>=6",
 ]
+
+[project.urls]
+Homepage = "https://github.com/tandemetry/tandemetry"
+Repository = "https://github.com/tandemetry/tandemetry"
+Documentation = "https://github.com/tandemetry/tandemetry/tree/main/docs"
+Issues = "https://github.com/tandemetry/tandemetry/issues"
 
 [project.scripts]
 tandemetry = "tandemetry.cli:main"
