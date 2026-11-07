@@ -13,6 +13,21 @@ AI agents now open a large share of pull requests, but teams can't tell whether 
 merged, reverted or rewritten — or which agent works best in their codebase. Tandemetry answers
 that from your own Git data, without sending code anywhere and without LLM calls.
 
+## What you will see
+
+![Dashboard mockup with illustrative data](docs/assets/dashboard-mockup.svg)
+
+Every number is traceable: each PR is labelled `agent`, `human` or `mixed` by a transparent rule
+(bot author, commit trailer, PR description, branch name), and the matched rule is stored with the
+label. See [agent attribution](docs/attribution.md) and the
+[signatures research](docs/research/signatures.md).
+
+## How it works
+
+GitHub webhooks and a history backfill feed Kafka. The attribution engine labels each event,
+ClickHouse computes the metrics, and Grafana and a metrics API read them. PostgreSQL holds the
+configuration. Details: [architecture](docs/architecture.md).
+
 ## Principles
 
 - **Self-hosted.** Your code and data stay in your infrastructure.
@@ -46,4 +61,11 @@ uv run mypy
 uv run tandemetry --version
 ```
 
-The local service stack (Kafka, ClickHouse, PostgreSQL) arrives in a later release.
+Local service stack (Kafka, ClickHouse, PostgreSQL):
+
+```bash
+cp deploy/.env.example deploy/.env
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --wait
+```
+
+See [deploy/README.md](deploy/README.md) for verification and troubleshooting.

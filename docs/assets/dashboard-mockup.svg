@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 480" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+  <title>Tandemetry dashboard mockup with illustrative data</title>
+  <rect width="900" height="480" rx="12" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="32" y="48" font-size="20" font-weight="600" fill="#1f2328">Agents vs humans · last 30 days</text>
+  <text x="868" y="48" font-size="12" text-anchor="end" fill="#6e7781">Illustrative mock data</text>
+
+  <g font-size="12" fill="#6e7781">
+    <rect x="32" y="72" width="200" height="88" rx="8" fill="#f6f8fa" stroke="#d0d7de"/>
+    <text x="48" y="98">Agent PR share</text>
+    <text x="48" y="136" font-size="28" font-weight="600" fill="#1f2328">34%</text>
+    <rect x="248" y="72" width="200" height="88" rx="8" fill="#f6f8fa" stroke="#d0d7de"/>
+    <text x="264" y="98">Merge rate (agent / human)</text>
+    <text x="264" y="136" font-size="28" font-weight="600" fill="#1f2328">71% / 88%</text>
+    <rect x="464" y="72" width="200" height="88" rx="8" fill="#f6f8fa" stroke="#d0d7de"/>
+    <text x="480" y="98">Reverted within 14 days</text>
+    <text x="480" y="136" font-size="28" font-weight="600" fill="#1f2328">6% / 2%</text>
+    <rect x="680" y="72" width="188" height="88" rx="8" fill="#f6f8fa" stroke="#d0d7de"/>
+    <text x="696" y="98">Rework within 2 weeks</text>
+    <text x="696" y="136" font-size="28" font-weight="600" fill="#1f2328">19% / 9%</text>
+  </g>
+
+  <text x="32" y="204" font-size="14" font-weight="600" fill="#1f2328">Merge rate by agent</text>
+  <g font-size="12" fill="#1f2328">
+    <text x="32" y="240">Claude Code</text>
+    <rect x="160" y="226" width="400" height="18" rx="3" fill="#eaeef2"/>
+    <rect x="160" y="226" width="304" height="18" rx="3" fill="#0969da"/>
+    <text x="572" y="240">76%</text>
+
+    <text x="32" y="276">Copilot agent</text>
+    <rect x="160" y="262" width="400" height="18" rx="3" fill="#eaeef2"/>
+    <rect x="160" y="262" width="276" height="18" rx="3" fill="#0969da"/>
+    <text x="572" y="276">69%</text>
+
+    <text x="32" y="312">Codex</text>
+    <rect x="160" y="298" width="400" height="18" rx="3" fill="#eaeef2"/>
+    <rect x="160" y="298" width="260" height="18" rx="3" fill="#0969da"/>
+    <text x="572" y="312">65%</text>
+
+    <text x="32" y="348">Devin</text>
+    <rect x="160" y="334" width="400" height="18" rx="3" fill="#eaeef2"/>
+    <rect x="160" y="334" width="224" height="18" rx="3" fill="#0969da"/>
+    <text x="572" y="348">56%</text>
+
+    <text x="32" y="384">Humans</text>
+    <rect x="160" y="370" width="400" height="18" rx="3" fill="#eaeef2"/>
+    <rect x="160" y="370" width="352" height="18" rx="3" fill="#57606a"/>
+    <text x="572" y="384">88%</text>
+  </g>
+
+  <text x="640" y="204" font-size="14" font-weight="600" fill="#1f2328">Agent PR share by week</text>
+  <g stroke="#0969da" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="640,380 700,360 760,340 820,300 868,270"/>
+  </g>
+  <line x1="640" y1="392" x2="868" y2="392" stroke="#d0d7de"/>
+
+  <text x="32" y="436" font-size="12" fill="#6e7781">Aggregated by team, repository and agent. No individual developer rankings.</text>
+</svg>
