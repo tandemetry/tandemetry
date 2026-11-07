@@ -1,0 +1,31 @@
+agents:
+  - name: Claude Code
+    signals:
+      - {kind: commit_trailer, value: "noreply@anthropic.com", confidence: high}
+      - {kind: description_phrase, value: "Generated with Claude Code", confidence: medium}
+      - {kind: branch_prefix, value: "claude/", confidence: medium}
+  - name: GitHub Copilot coding agent
+    signals:
+      - {kind: bot_account, value: "Copilot", confidence: high}
+      - {kind: bot_account, value: "copilot-swe-agent[bot]", confidence: high}
+      - {kind: commit_trailer, value: "198982749+Copilot@users.noreply.github.com", confidence: high}
+      - {kind: commit_trailer, value: "223556219+Copilot@users.noreply.github.com", confidence: high}
+  - name: Devin
+    signals:
+      - {kind: bot_account, value: "devin-ai-integration[bot]", confidence: high}
+  - name: Cursor
+    signals:
+      - {kind: bot_account, value: "cursor[bot]", confidence: high}
+      - {kind: commit_trailer, value: "cursoragent@cursor.com", confidence: high}
+      - {kind: branch_prefix, value: "cursor/", confidence: medium}
+  - name: OpenAI Codex
+    signals:
+      - {kind: commit_trailer, value: "noreply@openai.com", confidence: high}
+      - {kind: commit_trailer, value: "codex@openai.com", confidence: high}
+      - {kind: branch_prefix, value: "codex/", confidence: medium}
+  - name: Google Jules
+    signals:
+      - {kind: bot_account, value: "google-labs-jules[bot]", confidence: high}
+  - name: Open SWE
+    signals:
+      - {kind: commit_trailer, value: "open-swe@users.noreply.github.com", confidence: high}

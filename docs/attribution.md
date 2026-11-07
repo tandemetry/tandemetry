@@ -20,7 +20,15 @@ A PR with both agent-attributed and human commits is `mixed`.
 ## Signatures catalog
 
 Known signatures live in `src/tandemetry/attribution/signatures.yaml` (open for community
-contributions). Week 1 task: build the initial catalog from agent PRs in ~20 popular public repos.
+contributions). The initial catalog was built from agent PRs in 22 popular public repos; method
+and findings are in [research/signatures.md](research/signatures.md).
+
+Each agent lists `signals` of a `kind` (`bot_account`, `commit_trailer`, `description_phrase`,
+`branch_prefix`, `label`), a `value` and a `confidence`. The confidence is fixed per kind by the
+rules table above (bot account and trailer: high; the rest: medium) and the loader rejects
+entries that disagree; `src/tandemetry/attribution/catalog.py` is the source of truth.
+Trailers are matched by their stable email, not the display name. To contribute, add a signal
+you observed in real PRs and include example PR URLs in the pull request.
 
 ## Known limitations
 
