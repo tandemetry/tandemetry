@@ -2,7 +2,7 @@
 
 ## Week 1 (Nov 1–7): validation & skeleton
 - [ ] Run Apache DevLake and Middleware; document gaps for agent analytics
-- [ ] Collect agent PRs from ~20 popular repos via GitHub API; draft signatures catalog
+- [x] Collect agent PRs from 22 popular repos via GitHub API; signatures catalog (#9)
 - [x] Project skeleton: uv, ruff, mypy, pytest, pre-commit (gitleaks), CI (#6)
 - [ ] Docker compose: Kafka (KRaft), ClickHouse, PostgreSQL
 - [ ] README with product promise and dashboard mockup
