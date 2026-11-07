@@ -3,6 +3,10 @@
 Single-node Kafka (KRaft), ClickHouse and PostgreSQL 17 for local development.
 Requires Docker with Compose v2.17 or newer.
 
+This stack is infrastructure only. During development run the application on the host
+(`uv run …`) against these services; a Dockerfile and application services (compose profile
+`app`) are added with the first runnable service, see the roadmap.
+
 ## Start
 
 ```bash

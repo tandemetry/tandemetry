@@ -10,6 +10,7 @@
 
 ## Week 2 (Nov 8–14): ingestion
 - [ ] GitHub App manifest (read-only) + webhook receiver with signature verification
+- [ ] Dockerfile and application services in `deploy/docker-compose.yml` (profile `app`)
 - [ ] Unified event model
 - [ ] Kafka producers; ClickHouse consumer
 - [ ] Backfill via GitHub API with rate-limit handling
