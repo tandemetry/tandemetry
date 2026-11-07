@@ -41,7 +41,9 @@ All platforms map into one domain model (future GitLab/Azure DevOps adapters pro
 
 ## Deployment
 
-- Local / trial: `docker compose up` (all components, single node).
+- Local / trial: `docker compose up` (single node). Today `deploy/docker-compose.yml` runs the
+  infrastructure (Kafka, ClickHouse, PostgreSQL, see [deploy/README.md](../deploy/README.md));
+  application services join it with the first runnable service.
 - Production: Helm chart; consumers scaled by KEDA on Kafka consumer lag.
 
 ## Security

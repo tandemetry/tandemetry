@@ -4,12 +4,13 @@
 - [ ] Run Apache DevLake and Middleware; document gaps for agent analytics
 - [x] Collect agent PRs from 22 popular repos via GitHub API; signatures catalog (#9)
 - [x] Project skeleton: uv, ruff, mypy, pytest, pre-commit (gitleaks), CI (#6)
-- [ ] Docker compose: Kafka (KRaft), ClickHouse, PostgreSQL
+- [x] Docker compose: Kafka (KRaft), ClickHouse, PostgreSQL (#12)
 - [ ] README with product promise and dashboard mockup
 - [ ] Publish `tandemetry` 0.0.1 to PyPI (minimal working CLI)
 
 ## Week 2 (Nov 8–14): ingestion
 - [ ] GitHub App manifest (read-only) + webhook receiver with signature verification
+- [ ] Dockerfile and application services in `deploy/docker-compose.yml` (profile `app`)
 - [ ] Unified event model
 - [ ] Kafka producers; ClickHouse consumer
 - [ ] Backfill via GitHub API with rate-limit handling

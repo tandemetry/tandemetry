@@ -22,6 +22,15 @@ jobs:
       - run: uv run mypy
       - run: uv run pytest
 
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: cp deploy/.env.example deploy/.env
+      - run: docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --wait
+      - run: docker compose -f deploy/docker-compose.yml --env-file deploy/.env down -v
+        if: always()
+
   gitleaks:
     runs-on: ubuntu-latest
     env:

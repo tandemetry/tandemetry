@@ -64,7 +64,7 @@ uv sync                       # install deps
 uv run pytest                 # tests
 uv run ruff check . && uv run ruff format --check .
 uv run mypy
-docker compose -f deploy/docker-compose.yml up -d   # local stack (not available yet)
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --wait   # local stack, see deploy/README.md
 ```
 
 ## Conventions
