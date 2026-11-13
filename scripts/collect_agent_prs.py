@@ -32,7 +32,7 @@ REPOS = [
     "google-gemini/gemini-cli",
     "anthropics/claude-code",
 ]
-PRS_PER_REPO = 200
+PRS_PER_REPO = 100
 COMMITS_PER_REPO = 100
 EXAMPLES_PER_SIGNAL = 3
 SEARCH_PAUSE_SECONDS = 3
