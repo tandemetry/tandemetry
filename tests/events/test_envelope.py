@@ -19,6 +19,7 @@ from tandemetry.events.payloads import (
     Review,
 )
 
+REPO_ID = 1296269
 REPO = "acme/widgets"
 SHA = "a" * 40
 OTHER_SHA = "b" * 40
@@ -53,9 +54,12 @@ PAYLOADS: list[EventPayload] = [
 
 
 def event(
-    payload: EventPayload = PULL_REQUEST, repo: str = REPO, occurred_at: datetime = OCCURRED_AT
+    payload: EventPayload = PULL_REQUEST,
+    repo_id: int = REPO_ID,
+    repo: str = REPO,
+    occurred_at: datetime = OCCURRED_AT,
 ) -> Event:
-    return Event.create(Source.GITHUB, repo, occurred_at, payload)
+    return Event.create(Source.GITHUB, repo_id, repo, occurred_at, payload)
 
 
 def wire(**overrides: object) -> dict[str, Any]:
@@ -78,6 +82,13 @@ def test_event_id_is_deterministic() -> None:
     assert event().event_id == event().event_id
 
 
+def test_event_id_survives_repo_rename() -> None:
+    renamed = event(repo="acme-inc/Widgets")
+
+    assert renamed.event_id == event().event_id
+    assert renamed.repo == "acme-inc/Widgets"
+
+
 def test_event_id_ignores_timezone_offset() -> None:
     kyiv = OCCURRED_AT.astimezone(timezone(timedelta(hours=2)))
 
@@ -90,11 +101,11 @@ def test_event_id_ignores_timezone_offset() -> None:
 @pytest.mark.parametrize(
     "other",
     [
-        event(repo="acme/gadgets"),
+        event(repo_id=REPO_ID + 1),
         event(occurred_at=OCCURRED_AT + timedelta(seconds=1)),
         event(PULL_REQUEST.model_copy(update={"action": PullRequestAction.CLOSED})),
     ],
-    ids=["repo", "occurred_at", "action"],
+    ids=["repo_id", "occurred_at", "action"],
 )
 def test_event_id_differs_per_fact(other: Event) -> None:
     assert other.event_id != event().event_id
@@ -111,7 +122,7 @@ def test_event_id_differs_per_type_with_same_key() -> None:
 
 
 def test_event_id_matches_published_recipe() -> None:
-    assert event().event_id == UUID("fcfcfa07-ed66-5088-b1ee-2a86bedc17d2")
+    assert event().event_id == UUID("1a1c5872-0ead-5ead-94c8-6a4f281f1ca1")
 
 
 def test_mismatched_event_id_is_rejected() -> None:
@@ -143,6 +154,7 @@ def payload_with(**overrides: object) -> dict[str, Any]:
         payload_with(extra="nope"),
         payload_with(type="deployment"),
         wire(occurred_at="2026-11-13T10:00:00"),
+        wire(repo_id=0),
         wire(repo="widgets"),
         wire(repo="acme/ widgets"),
         payload_with(number=0),
@@ -153,6 +165,7 @@ def payload_with(**overrides: object) -> dict[str, Any]:
         "extra-payload-field",
         "unknown-type",
         "naive-datetime",
+        "non-positive-repo-id",
         "repo-without-owner",
         "repo-with-whitespace",
         "non-positive-number",

@@ -37,8 +37,9 @@ flowchart TB
 
 All platforms map into one domain model (future GitLab/Azure DevOps adapters produce the same),
 defined in `src/tandemetry/events/` (the source of truth). An `Event` envelope carries `event_id`,
-`source` (platform, e.g. `github`, the same for webhooks and backfill), `repo` (`owner/name`),
-`occurred_at` and a `payload` discriminated by `type`:
+`source` (platform, e.g. `github`, the same for webhooks and backfill), `repo_id` (the platform's
+numeric repository id), `repo` (`owner/name`), `occurred_at` and a `payload` discriminated by
+`type`:
 
 | `type` | Fields | Natural key |
 | --- | --- | --- |
@@ -51,7 +52,7 @@ defined in `src/tandemetry/events/` (the source of truth). An `Event` envelope c
 
 Events are immutable and reject unknown fields. The wire format is the envelope as JSON.
 
-**`event_id`** = `uuid5(namespace, "source|repo|type|natural_key|occurred_at_utc_iso")`, where the
+**`event_id`** = `uuid5(namespace, "source|repo_id|type|natural_key|occurred_at_utc_iso")`, where the
 namespace is `uuid5(NAMESPACE_URL, "https://github.com/tandemetry/tandemetry/events/v1")`. The same
 fact always gets the same id, so consumers deduplicate Kafka redeliveries, replays and
 webhook/backfill overlaps by `event_id`. Deserialization rejects an id that does not match the
@@ -63,10 +64,9 @@ must pick the same timestamp for the same fact, or ids diverge.
 `edited` and `reopened` have no dedicated timestamp: they use the webhook's `updated_at` and come
 from webhooks only; backfill emits `opened` and `closed`.
 
-**`repo`** is the canonical `full_name` returned by the GitHub API at the time of the event
-(GitHub names are case-insensitive, ids are not). Known limitation: renaming or transferring a
-repository starts a new identity, so facts backfilled after a rename are not deduplicated against
-earlier ones.
+**`repo_id`**, not the name, is part of the identity: renaming or transferring a repository keeps
+its id, so facts stay deduplicated across renames and name case does not matter. `repo` is a label
+holding the `full_name` at the time of the event.
 
 Check runs link to pull requests through `head_sha` → `commit.sha` → `commit.pull_request`.
 
