@@ -39,9 +39,9 @@ alias dc='docker compose -f deploy/docker-compose.yml --env-file deploy/.env'
 
 dc exec kafka /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
 echo hello | dc exec -T kafka /opt/kafka/bin/kafka-console-producer.sh \
-  --bootstrap-server kafka:9092 --topic raw.github
+  --bootstrap-server kafka:9092 --topic smoke.test
 dc exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 \
-  --topic raw.github --from-beginning --max-messages 1
+  --topic smoke.test --from-beginning --max-messages 1
 
 curl localhost:8123/ping
 dc exec clickhouse sh -c \

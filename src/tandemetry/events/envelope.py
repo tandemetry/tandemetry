@@ -41,7 +41,7 @@ def derive_event_id(source: Source, repo_id: int, occurred_at: datetime, payload
 
 
 class Event(DomainModel):
-    """A platform fact; `occurred_at` is the platform's timestamp, never the receive time."""
+    """A platform fact, built only via `create`; `occurred_at` is the platform's timestamp."""
 
     event_id: UUID
     source: Source
