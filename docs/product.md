@@ -33,7 +33,7 @@ no Jira dependency, no individual rankings, no LLM required.
 | Merge rate | merged / closed PRs |
 | Autonomy | PRs merged without human commits after open |
 | Revert within 14 days | merged PRs whose commits were reverted within 14 days |
-| Rework within 2 weeks | lines of a PR changed by another PR within 14 days |
+| Rework within 2 weeks | merged PRs whose files are changed by another merged PR within 14 days (file-level approximation of line rework) |
 | CI failure rate | PRs with ≥1 failed check run / all PRs |
 | Review time | open → first review, open → merge |
 | Cost per merged PR (optional) | agent tokens (OTel) / merged PRs |

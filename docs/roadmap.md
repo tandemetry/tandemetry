@@ -12,7 +12,7 @@
   second half of the Nov 7 kill/continue criterion)
 - [ ] GitHub App manifest (read-only) + webhook receiver with signature verification
 - [ ] Dockerfile and application services in `deploy/docker-compose.yml` (profile `app`)
-- [ ] Unified event model
+- [x] Unified event model (#17)
 - [ ] Kafka producers; ClickHouse consumer
 - [ ] Backfill via GitHub API with rate-limit handling
 
