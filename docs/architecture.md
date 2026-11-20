@@ -58,6 +58,13 @@ fact always gets the same id, so consumers deduplicate Kafka redeliveries, repla
 webhook/backfill overlaps by `event_id`. Deserialization rejects an id that does not match the
 fact, so changing the recipe means bumping the namespace version and re-deriving stored events.
 
+**Stream.** A message on `events.normalized` has the `repo_id` as its key (decimal UTF-8
+string), so a repository's events share a partition and keep their order (ADR-001), and the
+`Event` JSON as its value; consumers validate it, which rejects an `event_id` that does not match
+the fact. Producers use `acks=all` with the idempotent producer, which removes duplicates from
+retries within one producer session only. Delivery is at-least-once: restarts, replays and
+webhook/backfill overlap produce duplicates, and sinks remove them by `event_id`.
+
 **Storage.** `tandemetry migrate` applies `src/tandemetry/storage/clickhouse_migrations/` (one
 idempotent DDL statement per file, in name order; see [ADR-004](adr/004-clickhouse-schema-migrations.md)). The `events` table is a `ReplacingMergeTree`
 ordered by `(repo_id, type, occurred_at, event_id)`; since `event_id` is derived from those fields,

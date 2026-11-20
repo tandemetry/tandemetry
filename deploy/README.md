@@ -73,6 +73,24 @@ dc exec clickhouse sh -c 'clickhouse-client --user "$CLICKHOUSE_USER" \
 `events` is a `ReplacingMergeTree`: a redelivered event is removed on a background merge, so
 queries that must not double-count use `FINAL` (`SELECT count() FROM events FINAL`).
 
+## Publish a sample event
+
+`tandemetry publish-sample` sends one fixed event to `events.normalized` (Kafka on
+`localhost:29092`, override with `TANDEMETRY_KAFKA__BOOTSTRAP_SERVERS`). The key is the
+repository id, so all events of a repository land in one partition and keep their order.
+
+```bash
+uv run tandemetry publish-sample      # published f9976cac-… to events.normalized
+dc exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 \
+  --topic events.normalized --from-beginning --max-messages 1 \
+  --formatter-property print.key=true --formatter-property print.partition=true
+dc exec kafka /opt/kafka/bin/kafka-get-offsets.sh --bootstrap-server kafka:9092 \
+  --topic events.normalized         # events.normalized:<partition>:<message count>
+```
+
+Running the command twice stores two messages with the same `event_id`; the ClickHouse sink
+keeps one row (see `events` above).
+
 ## Stop and reset
 
 ```bash

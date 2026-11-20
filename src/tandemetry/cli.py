@@ -1,13 +1,18 @@
 import argparse
 import asyncio
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
+from contextlib import AbstractAsyncContextManager
 from importlib.metadata import version
 from typing import Protocol
 
+from aiokafka.errors import KafkaError
 from clickhouse_connect.driver.exceptions import Error as ClickHouseError
 
-from tandemetry.settings import ClickHouseSettings, Settings
+from tandemetry.events.kafka import kafka_event_publisher
+from tandemetry.events.ports import EventPublisher
+from tandemetry.events.sample import SAMPLE_EVENT
+from tandemetry.settings import ClickHouseSettings, KafkaSettings, Settings
 from tandemetry.storage.clickhouse import ClickHouseMigrator, clickhouse_client
 
 
@@ -49,6 +54,27 @@ class MigrateCommand:
         print(f"applied: {', '.join(applied) or 'nothing'}")
 
 
+PublisherFactory = Callable[[KafkaSettings], AbstractAsyncContextManager[EventPublisher]]
+
+
+class PublishSampleCommand:
+    help = "publish a fixed sample event to Kafka"
+
+    def __init__(
+        self, settings: KafkaSettings, open_publisher: PublisherFactory = kafka_event_publisher
+    ) -> None:
+        self._settings = settings
+        self._open_publisher = open_publisher
+
+    async def run(self) -> None:
+        try:
+            async with self._open_publisher(self._settings) as publisher:
+                await publisher.publish(SAMPLE_EVENT)
+        except KafkaError as error:
+            raise CommandError(f"Kafka at {self._settings.bootstrap_servers}: {error}") from error
+        print(f"published {SAMPLE_EVENT.event_id} to {self._settings.events_topic}")
+
+
 class Cli:
     def __init__(
         self,
@@ -85,6 +111,9 @@ class Cli:
 
 def main() -> None:
     settings = Settings()
-    commands: dict[str, Command] = {"migrate": MigrateCommand(settings.clickhouse)}
+    commands: dict[str, Command] = {
+        "migrate": MigrateCommand(settings.clickhouse),
+        "publish-sample": PublishSampleCommand(settings.kafka),
+    }
     cli = Cli(PackageVersionProvider(), settings, commands)
     raise SystemExit(cli.run())

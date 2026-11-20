@@ -21,3 +21,11 @@ def test_clickhouse_settings_are_read_from_nested_environment(
     assert clickhouse.port == 18123
     assert clickhouse.password.get_secret_value() == "secret"
     assert "secret" not in repr(clickhouse)
+
+
+def test_kafka_settings_are_read_from_nested_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("TANDEMETRY_KAFKA__BOOTSTRAP_SERVERS", "kafka:9092")
+    monkeypatch.setenv("TANDEMETRY_KAFKA__EVENTS_TOPIC", "custom.events")
+    kafka = Settings().kafka
+    assert kafka.bootstrap_servers == "kafka:9092"
+    assert kafka.events_topic == "custom.events"
