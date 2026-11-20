@@ -13,6 +13,9 @@ class ClickHouseSettings(BaseModel):
 class KafkaSettings(BaseModel):
     bootstrap_servers: str = "localhost:29092"
     events_topic: str = "events.normalized"
+    consumer_group: str = "tandemetry-clickhouse"
+    max_batch_records: PositiveInt = 500
+    poll_timeout_ms: PositiveInt = 1000
 
 
 class Settings(BaseSettings):

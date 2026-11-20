@@ -91,6 +91,34 @@ dc exec kafka /opt/kafka/bin/kafka-get-offsets.sh --bootstrap-server kafka:9092 
 Running the command twice stores two messages with the same `event_id`; the ClickHouse sink
 keeps one row (see `events` above).
 
+## Consume into ClickHouse
+
+`tandemetry consume` moves events from `events.normalized` into the `events` table until Ctrl+C.
+With the ClickHouse variables from "Run the application against the stack" exported:
+
+```bash
+uv run tandemetry migrate
+uv run tandemetry consume             # terminal 1: consuming events.normalized as tandemetry-clickhouse
+
+uv run tandemetry publish-sample      # terminal 2, twice
+uv run tandemetry publish-sample
+dc exec clickhouse sh -c 'clickhouse-client --user "$CLICKHOUSE_USER" \
+  --password "$CLICKHOUSE_PASSWORD" -d "$CLICKHOUSE_DB" -q "SELECT count() FROM events FINAL"'   # 1
+dc exec kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server kafka:9092 \
+  --describe --group tandemetry-clickhouse          # LAG 0 on every partition
+```
+
+Replay everything (redelivery): stop `consume` with Ctrl+C, reset the group, start it again;
+the count stays the same.
+
+```bash
+dc exec kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server kafka:9092 \
+  --group tandemetry-clickhouse --topic events.normalized --reset-offsets --to-earliest --execute
+```
+
+A reset is rejected while a consumer is running; after a hard kill wait about 10 s (the
+consumer's session timeout) for the group to become empty.
+
 ## Stop and reset
 
 ```bash

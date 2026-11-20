@@ -26,6 +26,12 @@ def test_clickhouse_settings_are_read_from_nested_environment(
 def test_kafka_settings_are_read_from_nested_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("TANDEMETRY_KAFKA__BOOTSTRAP_SERVERS", "kafka:9092")
     monkeypatch.setenv("TANDEMETRY_KAFKA__EVENTS_TOPIC", "custom.events")
+    monkeypatch.setenv("TANDEMETRY_KAFKA__CONSUMER_GROUP", "custom-group")
+    monkeypatch.setenv("TANDEMETRY_KAFKA__MAX_BATCH_RECORDS", "50")
+    monkeypatch.setenv("TANDEMETRY_KAFKA__POLL_TIMEOUT_MS", "250")
     kafka = Settings().kafka
     assert kafka.bootstrap_servers == "kafka:9092"
     assert kafka.events_topic == "custom.events"
+    assert kafka.consumer_group == "custom-group"
+    assert kafka.max_batch_records == 50
+    assert kafka.poll_timeout_ms == 250

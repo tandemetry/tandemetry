@@ -9,11 +9,18 @@ from typing import Protocol
 from aiokafka.errors import KafkaError
 from clickhouse_connect.driver.exceptions import Error as ClickHouseError
 
-from tandemetry.events.kafka import kafka_event_publisher
-from tandemetry.events.ports import EventPublisher
+from tandemetry.events.consumer import EventConsumer
+from tandemetry.events.kafka import kafka_batch_source, kafka_event_publisher
+from tandemetry.events.ports import BatchSource, EventPublisher, EventSink
 from tandemetry.events.sample import SAMPLE_EVENT
 from tandemetry.settings import ClickHouseSettings, KafkaSettings, Settings
-from tandemetry.storage.clickhouse import ClickHouseMigrator, clickhouse_client
+from tandemetry.storage.clickhouse import (
+    ClickHouseMigrator,
+    clickhouse_client,
+    clickhouse_event_store,
+)
+
+INTERRUPTED_EXIT_CODE = 130
 
 
 class VersionProvider(Protocol):
@@ -75,6 +82,40 @@ class PublishSampleCommand:
         print(f"published {SAMPLE_EVENT.event_id} to {self._settings.events_topic}")
 
 
+SourceFactory = Callable[[KafkaSettings], AbstractAsyncContextManager[BatchSource]]
+SinkFactory = Callable[[ClickHouseSettings], AbstractAsyncContextManager[EventSink]]
+
+
+class ConsumeCommand:
+    help = "consume events from Kafka into ClickHouse until interrupted"
+
+    def __init__(
+        self,
+        kafka: KafkaSettings,
+        clickhouse: ClickHouseSettings,
+        open_source: SourceFactory = kafka_batch_source,
+        open_sink: SinkFactory = clickhouse_event_store,
+    ) -> None:
+        self._kafka = kafka
+        self._clickhouse = clickhouse
+        self._open_source = open_source
+        self._open_sink = open_sink
+
+    async def run(self) -> None:
+        try:
+            async with (
+                self._open_sink(self._clickhouse) as sink,
+                self._open_source(self._kafka) as source,
+            ):
+                print(f"consuming {self._kafka.events_topic} as {self._kafka.consumer_group}")
+                await EventConsumer(source, sink).run()
+        except KafkaError as error:
+            raise CommandError(f"Kafka at {self._kafka.bootstrap_servers}: {error}") from error
+        except ClickHouseError as error:
+            address = f"{self._clickhouse.host}:{self._clickhouse.port}"
+            raise CommandError(f"ClickHouse at {address}: {error}") from error
+
+
 class Cli:
     def __init__(
         self,
@@ -106,6 +147,8 @@ class Cli:
         except CommandError as error:
             print(f"{self._parser.prog} {arguments.command}: {error}", file=sys.stderr)
             return 1
+        except KeyboardInterrupt:
+            return INTERRUPTED_EXIT_CODE
         return 0
 
 
@@ -114,6 +157,7 @@ def main() -> None:
     commands: dict[str, Command] = {
         "migrate": MigrateCommand(settings.clickhouse),
         "publish-sample": PublishSampleCommand(settings.kafka),
+        "consume": ConsumeCommand(settings.kafka, settings.clickhouse),
     }
     cli = Cli(PackageVersionProvider(), settings, commands)
     raise SystemExit(cli.run())

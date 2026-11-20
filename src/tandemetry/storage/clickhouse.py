@@ -67,6 +67,15 @@ class ClickHouseEventStore:
         await self._client.insert(EVENTS_TABLE, rows, column_names=EVENT_COLUMNS)
 
 
+@asynccontextmanager
+async def clickhouse_event_store(
+    settings: ClickHouseSettings,
+) -> AsyncIterator[ClickHouseEventStore]:
+    """An event store on the configured ClickHouse database, open for the block."""
+    async with clickhouse_client(settings) as client:
+        yield ClickHouseEventStore(client)
+
+
 class SqlExecutor(Protocol):
     async def command(self, cmd: str) -> object: ...
 

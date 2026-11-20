@@ -1,6 +1,6 @@
 import asyncio
 import socket
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 from uuid import UUID
 
@@ -10,6 +10,7 @@ from pydantic import SecretStr
 from tandemetry.cli import (
     Cli,
     CommandError,
+    ConsumeCommand,
     MigrateCommand,
     PackageVersionProvider,
     PublishSampleCommand,
@@ -129,6 +130,42 @@ def test_publish_sample_reports_unreachable_kafka(unused_tcp_port: int) -> None:
     settings = KafkaSettings(bootstrap_servers=f"localhost:{unused_tcp_port}")
     with pytest.raises(CommandError, match=f"Kafka at localhost:{unused_tcp_port}"):
         asyncio.run(PublishSampleCommand(settings).run())
+
+
+class InterruptedCommand:
+    help = "interrupted by the user"
+
+    async def run(self) -> None:
+        raise KeyboardInterrupt
+
+
+def test_interrupted_command_exits_with_130() -> None:
+    cli = Cli(FakeVersionProvider(), Settings(), {"wait": InterruptedCommand()})
+    assert cli.run(["wait"]) == 130
+
+
+class NullSink:
+    async def write(self, events: Sequence[Event]) -> None:
+        return None
+
+
+@asynccontextmanager
+async def open_null_sink(settings: ClickHouseSettings) -> AsyncIterator[NullSink]:
+    yield NullSink()
+
+
+def test_consume_reports_unreachable_clickhouse(unused_tcp_port: int) -> None:
+    clickhouse = ClickHouseSettings(port=unused_tcp_port, password=SecretStr("secret"))
+    with pytest.raises(CommandError, match=f"ClickHouse at localhost:{unused_tcp_port}") as error:
+        asyncio.run(ConsumeCommand(KafkaSettings(), clickhouse).run())
+    assert "secret" not in str(error.value)
+
+
+def test_consume_reports_unreachable_kafka(unused_tcp_port: int) -> None:
+    kafka = KafkaSettings(bootstrap_servers=f"localhost:{unused_tcp_port}")
+    command = ConsumeCommand(kafka, ClickHouseSettings(), open_sink=open_null_sink)
+    with pytest.raises(CommandError, match=f"Kafka at localhost:{unused_tcp_port}"):
+        asyncio.run(command.run())
 
 
 def test_package_version_provider_reads_installed_metadata() -> None:
