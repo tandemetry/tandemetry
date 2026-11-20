@@ -54,6 +54,25 @@ dc exec postgres psql -U tandemetry -d tandemetry -c 'select version()'
 The ClickHouse and PostgreSQL examples read credentials from the containers' environment; pass
 your own `POSTGRES_USER` / `POSTGRES_DB` values from `deploy/.env` if you changed them.
 
+## Run the application against the stack
+
+The application reads `TANDEMETRY_*` variables; nested settings use `__`
+(`TANDEMETRY_CLICKHOUSE__HOST`, default `localhost:8123`). Reuse the credentials from `deploy/.env`:
+
+```bash
+set -a; source deploy/.env; set +a
+export TANDEMETRY_CLICKHOUSE__USERNAME="$CLICKHOUSE_USER" \
+       TANDEMETRY_CLICKHOUSE__PASSWORD="$CLICKHOUSE_PASSWORD" \
+       TANDEMETRY_CLICKHOUSE__DATABASE="$CLICKHOUSE_DB"
+
+uv run tandemetry migrate     # applied: 0001_events.sql (safe to repeat)
+dc exec clickhouse sh -c 'clickhouse-client --user "$CLICKHOUSE_USER" \
+  --password "$CLICKHOUSE_PASSWORD" -d "$CLICKHOUSE_DB" -q "SHOW CREATE TABLE events"'
+```
+
+`events` is a `ReplacingMergeTree`: a redelivered event is removed on a background merge, so
+queries that must not double-count use `FINAL` (`SELECT count() FROM events FINAL`).
+
 ## Stop and reset
 
 ```bash
@@ -63,7 +82,10 @@ dc down -v     # stop and delete all data volumes
 
 ## Pitfalls
 
-- **Port 5432 already in use** (a local PostgreSQL): set `POSTGRES_HOST_PORT` in `deploy/.env`.
+- **Port 5432 already in use** (a local PostgreSQL): set `POSTGRES_HOST_PORT` in `deploy/.env`
+  to a free port, e.g. `15432` (installers often take 5433 for a second version). Variables
+  exported in your shell override `deploy/.env`, so after `source deploy/.env` re-source it or
+  `unset POSTGRES_HOST_PORT` once you edit the file.
 - **Changed passwords have no effect** on existing data: the database reads them only when the
   volume is first created. Run `dc down -v` after editing credentials.
 - **Kafka data persists** in the `kafka-data` volume, so topics and messages survive restarts.

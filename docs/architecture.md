@@ -28,7 +28,7 @@ flowchart TB
 | Backfill worker | Pulls history (PRs, commits, reviews, check runs) respecting rate limits; resumable |
 | Kafka | Topics `raw.github`, `events.normalized`, `events.attributed`; replay for re-attribution |
 | Attribution engine | Normalizes events, applies rules (`docs/attribution.md`), emits attributed events |
-| ClickHouse | Append-only event tables + materialized views for metrics |
+| ClickHouse | `events` table (deduplicated by `event_id`) + materialized views for metrics |
 | PostgreSQL | Installations, repositories, attribution rules, settings |
 | Metrics API | Cohort metrics endpoints; feeds Slack report |
 | Observability | OTel traces across Kafka, Prometheus metrics (consumer lag, errors), Grafana |
@@ -57,6 +57,14 @@ namespace is `uuid5(NAMESPACE_URL, "https://github.com/tandemetry/tandemetry/eve
 fact always gets the same id, so consumers deduplicate Kafka redeliveries, replays and
 webhook/backfill overlaps by `event_id`. Deserialization rejects an id that does not match the
 fact, so changing the recipe means bumping the namespace version and re-deriving stored events.
+
+**Storage.** `tandemetry migrate` applies `src/tandemetry/storage/clickhouse_migrations/` (one
+idempotent DDL statement per file, in name order; see [ADR-004](adr/004-clickhouse-schema-migrations.md)). The `events` table is a `ReplacingMergeTree`
+ordered by `(repo_id, type, occurred_at, event_id)`; since `event_id` is derived from those fields,
+a redelivered event has the same sorting key and collapses into one row. Collapsing happens on
+background merges, so exact reads use `FINAL` (or `argMax`), and materialized views, which fire
+on every insert, must aggregate in a duplicate-safe way (e.g. `uniqExact(event_id)`, or a
+`ReplacingMergeTree` target) rather than plain `count()`/`sum()`.
 
 **`occurred_at`** is the platform's timestamp of the fact (PR created/closed, committer date,
 review submitted, check completed, merged), never the time Tandemetry received it. Every mapper
