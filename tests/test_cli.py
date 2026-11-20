@@ -1,7 +1,11 @@
-import pytest
+import asyncio
+import socket
 
-from tandemetry.cli import Cli, PackageVersionProvider
-from tandemetry.settings import Settings
+import pytest
+from pydantic import SecretStr
+
+from tandemetry.cli import Cli, CommandError, MigrateCommand, PackageVersionProvider
+from tandemetry.settings import ClickHouseSettings, Settings
 
 
 class FakeVersionProvider:
@@ -9,9 +13,32 @@ class FakeVersionProvider:
         return "9.9.9"
 
 
+class FakeCommand:
+    help = "do the thing"
+
+    def __init__(self) -> None:
+        self.runs = 0
+
+    async def run(self) -> None:
+        self.runs += 1
+
+
 @pytest.fixture
-def cli() -> Cli:
-    return Cli(FakeVersionProvider(), Settings())
+def unused_tcp_port() -> int:
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        port: int = probe.getsockname()[1]
+        return port
+
+
+@pytest.fixture
+def command() -> FakeCommand:
+    return FakeCommand()
+
+
+@pytest.fixture
+def cli(command: FakeCommand) -> Cli:
+    return Cli(FakeVersionProvider(), Settings(), {"thing": command})
 
 
 def test_version_flag_prints_name_and_version(cli: Cli, capsys: pytest.CaptureFixture[str]) -> None:
@@ -21,6 +48,43 @@ def test_version_flag_prints_name_and_version(cli: Cli, capsys: pytest.CaptureFi
 
 def test_unknown_flag_returns_non_zero(cli: Cli) -> None:
     assert cli.run(["--unknown"]) != 0
+
+
+def test_subcommand_runs_its_command(cli: Cli, command: FakeCommand) -> None:
+    assert cli.run(["thing"]) == 0
+    assert command.runs == 1
+
+
+def test_unknown_subcommand_returns_non_zero(cli: Cli, command: FakeCommand) -> None:
+    assert cli.run(["other"]) != 0
+    assert command.runs == 0
+
+
+def test_no_subcommand_prints_help(cli: Cli, capsys: pytest.CaptureFixture[str]) -> None:
+    assert cli.run([]) == 0
+    assert "do the thing" in capsys.readouterr().out
+
+
+class FailingCommand:
+    help = "always fails"
+
+    async def run(self) -> None:
+        raise CommandError("service unreachable")
+
+
+def test_command_error_is_reported_on_stderr_without_traceback(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    cli = Cli(FakeVersionProvider(), Settings(), {"fail": FailingCommand()})
+    assert cli.run(["fail"]) == 1
+    assert capsys.readouterr().err.strip() == "tandemetry fail: service unreachable"
+
+
+def test_migrate_reports_unreachable_clickhouse(unused_tcp_port: int) -> None:
+    settings = ClickHouseSettings(port=unused_tcp_port, password=SecretStr("secret"))
+    with pytest.raises(CommandError, match=f"ClickHouse at localhost:{unused_tcp_port}") as error:
+        asyncio.run(MigrateCommand(settings).run())
+    assert "secret" not in str(error.value)
 
 
 def test_package_version_provider_reads_installed_metadata() -> None:
