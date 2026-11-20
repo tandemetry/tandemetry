@@ -13,6 +13,7 @@
 
 ## Week 3 (Nov 15–21): event pipeline
 - [x] Kafka producer; ClickHouse consumer (#20: #21 ClickHouse store, #22 publisher, #23 consumer)
+- [ ] ADR-004 (ClickHouse schema migrations): Proposed, awaiting maintainer acceptance
 
 ## Week 4 (Nov 22–28): ingestion
 - [ ] GitHub App manifest (read-only) + webhook receiver with signature verification
