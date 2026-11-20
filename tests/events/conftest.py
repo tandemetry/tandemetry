@@ -63,4 +63,8 @@ def kafka_settings(kafka_broker: tuple[DockerContainer, str]) -> KafkaSettings:
         ]
     )
     assert created.exit_code == 0, created.output
-    return KafkaSettings(bootstrap_servers=bootstrap_servers, events_topic=topic)
+    return KafkaSettings(
+        bootstrap_servers=bootstrap_servers,
+        events_topic=topic,
+        consumer_group=f"group-{uuid.uuid4().hex}",
+    )

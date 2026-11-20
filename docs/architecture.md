@@ -73,6 +73,14 @@ background merges, so exact reads use `FINAL` (or `argMax`), and materialized vi
 on every insert, must aggregate in a duplicate-safe way (e.g. `uniqExact(event_id)`, or a
 `ReplacingMergeTree` target) rather than plain `count()`/`sum()`.
 
+**Consumer.** `tandemetry consume` reads `events.normalized` in the consumer group
+`tandemetry-clickhouse` (`auto_offset_reset=earliest` for a new group), writes each batch to
+`events` in one insert and commits offsets only after the insert succeeds. A message that is not a
+valid `Event` is logged (topic, partition, offset; never the payload), skipped and committed with
+its batch. A failed insert or commit stops the process without committing, so the batch is
+delivered again and deduplicated as described above. A batch the sink always rejects therefore
+stops the consumer until the cause is fixed; a dead-letter topic is future work.
+
 **`occurred_at`** is the platform's timestamp of the fact (PR created/closed, committer date,
 review submitted, check completed, merged), never the time Tandemetry received it. Every mapper
 must pick the same timestamp for the same fact, or ids diverge.

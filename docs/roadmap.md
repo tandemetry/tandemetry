@@ -12,7 +12,7 @@
 - Open items moved to weeks 3–4.
 
 ## Week 3 (Nov 15–21): event pipeline
-- [ ] Kafka producer; ClickHouse consumer (#20: #21 ClickHouse store, #22 publisher, #23 consumer)
+- [x] Kafka producer; ClickHouse consumer (#20: #21 ClickHouse store, #22 publisher, #23 consumer)
 
 ## Week 4 (Nov 22–28): ingestion
 - [ ] GitHub App manifest (read-only) + webhook receiver with signature verification
