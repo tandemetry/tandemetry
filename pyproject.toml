@@ -15,6 +15,7 @@ classifiers = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "aiokafka>=0.15.0",
     "clickhouse-connect[async]>=1.13.0",
     "pydantic>=2.9",
     "pydantic-settings>=2.6",
@@ -58,6 +59,12 @@ select = ["E", "F", "I", "UP", "B", "SIM", "N", "ANN", "S", "RUF"]
 strict = true
 files = ["src", "tests"]
 plugins = ["pydantic.mypy"]
+explicit_package_bases = true
+mypy_path = "src"
+
+[[tool.mypy.overrides]]
+module = ["aiokafka", "aiokafka.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

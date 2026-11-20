@@ -1,11 +1,22 @@
 import asyncio
 import socket
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from uuid import UUID
 
 import pytest
 from pydantic import SecretStr
 
-from tandemetry.cli import Cli, CommandError, MigrateCommand, PackageVersionProvider
-from tandemetry.settings import ClickHouseSettings, Settings
+from tandemetry.cli import (
+    Cli,
+    CommandError,
+    MigrateCommand,
+    PackageVersionProvider,
+    PublishSampleCommand,
+)
+from tandemetry.events.envelope import Event
+from tandemetry.events.sample import SAMPLE_EVENT
+from tandemetry.settings import ClickHouseSettings, KafkaSettings, Settings
 
 
 class FakeVersionProvider:
@@ -85,6 +96,39 @@ def test_migrate_reports_unreachable_clickhouse(unused_tcp_port: int) -> None:
     with pytest.raises(CommandError, match=f"ClickHouse at localhost:{unused_tcp_port}") as error:
         asyncio.run(MigrateCommand(settings).run())
     assert "secret" not in str(error.value)
+
+
+class FakePublisher:
+    def __init__(self) -> None:
+        self.published: list[Event] = []
+
+    async def publish(self, event: Event) -> None:
+        self.published.append(event)
+
+
+def test_publish_sample_publishes_the_sample_event(capsys: pytest.CaptureFixture[str]) -> None:
+    publisher = FakePublisher()
+
+    @asynccontextmanager
+    async def open_publisher(settings: KafkaSettings) -> AsyncIterator[FakePublisher]:
+        yield publisher
+
+    asyncio.run(PublishSampleCommand(KafkaSettings(), open_publisher).run())
+
+    assert publisher.published == [SAMPLE_EVENT]
+    assert capsys.readouterr().out.strip() == (
+        f"published {SAMPLE_EVENT.event_id} to events.normalized"
+    )
+
+
+def test_sample_event_id_is_stable() -> None:
+    assert SAMPLE_EVENT.event_id == UUID("f9976cac-b4f9-5486-9348-4aa78a1ffc73")
+
+
+def test_publish_sample_reports_unreachable_kafka(unused_tcp_port: int) -> None:
+    settings = KafkaSettings(bootstrap_servers=f"localhost:{unused_tcp_port}")
+    with pytest.raises(CommandError, match=f"Kafka at localhost:{unused_tcp_port}"):
+        asyncio.run(PublishSampleCommand(settings).run())
 
 
 def test_package_version_provider_reads_installed_metadata() -> None:
