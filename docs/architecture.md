@@ -3,6 +3,10 @@
 Every event flows through Kafka; the attribution engine decides agent vs human; ClickHouse
 computes cohort metrics; Grafana and the API read from ClickHouse.
 
+Implemented so far: the unified event model, the Kafka publisher and the ClickHouse writer
+(event → `events.normalized` → `events`). The rest of the diagram is the v0.1 target; progress is
+tracked in the [roadmap](roadmap.md).
+
 ```mermaid
 flowchart TB
   GH[GitHub<br/>webhooks · REST API] --> WH[Webhook API<br/>FastAPI, signature check]
@@ -13,7 +17,9 @@ flowchart TB
   OC --> K
   PG[(PostgreSQL<br/>orgs, repos, rules)] --> AT[Attribution engine<br/>YAML rules]
   K --> AT
-  AT --> CH[(ClickHouse<br/>events + metric views)]
+  K --> CW[ClickHouse writer<br/>tandemetry consume]
+  CW --> CH[(ClickHouse<br/>events + metric views)]
+  AT --> CH
   CH --> API[Metrics API<br/>FastAPI]
   CH --> GF[Grafana dashboards]
   API --> SL[Slack weekly report]
@@ -28,6 +34,7 @@ flowchart TB
 | Backfill worker | Pulls history (PRs, commits, reviews, check runs) respecting rate limits; resumable |
 | Kafka | Topics `raw.github`, `events.normalized`, `events.attributed`; replay for re-attribution |
 | Attribution engine | Normalizes events, applies rules (`docs/attribution.md`), emits attributed events |
+| ClickHouse writer | `tandemetry consume`: `events.normalized` → `events`, commit after insert |
 | ClickHouse | `events` table (deduplicated by `event_id`) + materialized views for metrics |
 | PostgreSQL | Installations, repositories, attribution rules, settings |
 | Metrics API | Cohort metrics endpoints; feeds Slack report |

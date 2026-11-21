@@ -6,6 +6,8 @@ Open-source, self-hosted analytics for AI coding agents: compare agent vs human 
 repositories — merge rate, reverts, rework, CI failures, review load and cost per PR.
 
 > Status: early development (v0.1 in progress). Not ready for production use.
+> Working today: the event pipeline (event → Kafka → ClickHouse, deduplicated). Next: GitHub
+> webhooks and backfill, then attribution and metrics — see the [roadmap](docs/roadmap.md).
 
 ## Why
 
@@ -73,4 +75,5 @@ cp deploy/.env.example deploy/.env
 docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --wait
 ```
 
-See [deploy/README.md](deploy/README.md) for verification and troubleshooting.
+Run the event pipeline against it (`migrate`, `consume`, `publish-sample`): see
+[deploy/README.md](deploy/README.md) for the commands, verification and troubleshooting.
