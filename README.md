@@ -6,8 +6,9 @@ Open-source, self-hosted analytics for AI coding agents: compare agent vs human 
 repositories — merge rate, reverts, rework, CI failures, review load and cost per PR.
 
 > Status: early development (v0.1 in progress). Not ready for production use.
-> Working today: the event pipeline (event → Kafka → ClickHouse, deduplicated). Next: GitHub
-> webhooks and backfill, then attribution and metrics — see the [roadmap](docs/roadmap.md).
+> Working today: GitHub App webhooks → Kafka → ClickHouse (pull requests, commits, reviews,
+> check runs, merges; deduplicated). Next: backfill, then attribution and metrics — see the
+> [roadmap](docs/roadmap.md).
 
 ## Why
 

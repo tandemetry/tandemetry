@@ -1,0 +1,19 @@
+[
+  {
+    "sha": "bbcd538c8e72b8c175046e27cc8f907076331401",
+    "filename": "file1.txt",
+    "status": "added",
+    "additions": 103,
+    "deletions": 21,
+    "changes": 124,
+    "patch": "@@ -132,7 +132,7 @@ module Test @@ -1000,7 +1000,7 @@ module Test"
+  },
+  {
+    "sha": "ce587453ced02b1526dfb4cb910479d431683101",
+    "filename": "src/app.py",
+    "status": "modified",
+    "additions": 1,
+    "deletions": 0,
+    "changes": 1
+  }
+]

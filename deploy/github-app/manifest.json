@@ -1,0 +1,18 @@
+{
+  "name": "Tandemetry",
+  "description": "Self-hosted analytics of AI coding agents versus human-authored work. Read-only.",
+  "url": "https://github.com/tandemetry/tandemetry",
+  "hook_attributes": {
+    "url": "https://tandemetry.example.com/webhooks/github",
+    "active": true
+  },
+  "redirect_url": "https://tandemetry.example.com/",
+  "public": false,
+  "default_permissions": {
+    "metadata": "read",
+    "pull_requests": "read",
+    "checks": "read",
+    "contents": "read"
+  },
+  "default_events": ["pull_request", "pull_request_review", "check_run"]
+}

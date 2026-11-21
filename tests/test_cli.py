@@ -1,10 +1,12 @@
 import asyncio
+import re
 import socket
 from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 from uuid import UUID
 
 import pytest
+from fastapi import FastAPI
 from pydantic import SecretStr
 
 from tandemetry.cli import (
@@ -12,12 +14,24 @@ from tandemetry.cli import (
     CommandError,
     ConsumeCommand,
     MigrateCommand,
+    NormalizeCommand,
     PackageVersionProvider,
     PublishSampleCommand,
+    ServeCommand,
 )
 from tandemetry.events.envelope import Event
+from tandemetry.events.ports import Record
 from tandemetry.events.sample import SAMPLE_EVENT
-from tandemetry.settings import ClickHouseSettings, KafkaSettings, Settings
+from tandemetry.ingest.github.ports import GitHubApiError
+from tandemetry.ingest.github.raw import RawWebhook
+from tandemetry.ingest.github.rest import PullRequestCommit, PullRequestFile
+from tandemetry.settings import (
+    ApiSettings,
+    ClickHouseSettings,
+    GitHubSettings,
+    KafkaSettings,
+    Settings,
+)
 
 
 class FakeVersionProvider:
@@ -170,3 +184,102 @@ def test_consume_reports_unreachable_kafka(unused_tcp_port: int) -> None:
 
 def test_package_version_provider_reads_installed_metadata() -> None:
     assert PackageVersionProvider().get()
+
+
+GITHUB = GitHubSettings(
+    webhook_secret=SecretStr("hook-key"),
+    client_id="Iv1.client",
+    private_key=SecretStr("pem"),
+)
+
+
+class FakeRawPublisher:
+    async def publish(self, webhook: RawWebhook) -> None:
+        return None
+
+
+@asynccontextmanager
+async def open_fake_raw_publisher(settings: KafkaSettings) -> AsyncIterator[FakeRawPublisher]:
+    yield FakeRawPublisher()
+
+
+def test_serve_requires_the_webhook_secret() -> None:
+    command = ServeCommand(ApiSettings(), GitHubSettings(), KafkaSettings())
+    with pytest.raises(CommandError, match="TANDEMETRY_GITHUB__WEBHOOK_SECRET"):
+        asyncio.run(command.run())
+
+
+def test_serve_runs_the_api_on_the_configured_address() -> None:
+    served: list[tuple[FastAPI, ApiSettings]] = []
+
+    async def serve(app: FastAPI, settings: ApiSettings) -> None:
+        served.append((app, settings))
+
+    api = ApiSettings(port=8123)
+    asyncio.run(ServeCommand(api, GITHUB, KafkaSettings(), open_fake_raw_publisher, serve).run())
+    [(app, settings)] = served
+    assert isinstance(app, FastAPI)
+    assert settings == api
+
+
+def test_serve_reports_unreachable_kafka(unused_tcp_port: int) -> None:
+    kafka = KafkaSettings(bootstrap_servers=f"localhost:{unused_tcp_port}")
+    with pytest.raises(CommandError, match=f"Kafka at localhost:{unused_tcp_port}"):
+        asyncio.run(ServeCommand(ApiSettings(), GITHUB, kafka).run())
+
+
+def test_normalize_requires_app_credentials() -> None:
+    command = NormalizeCommand(KafkaSettings(), GitHubSettings())
+    with pytest.raises(CommandError, match="TANDEMETRY_GITHUB__CLIENT_ID"):
+        asyncio.run(command.run())
+
+
+class FailingGitHubApi:
+    async def pull_request_files(
+        self, installation_id: int, repo: str, number: int
+    ) -> Sequence[PullRequestFile]:
+        raise GitHubApiError("HTTP 401")
+
+    async def pull_request_commits(
+        self, installation_id: int, repo: str, number: int
+    ) -> Sequence[PullRequestCommit]:
+        raise GitHubApiError("HTTP 401")
+
+
+class OneRecordSource:
+    def __init__(self, value: bytes) -> None:
+        self._value = value
+
+    async def next_batch(self) -> Sequence[Record]:
+        return [Record("raw.github", 0, 0, self._value)]
+
+    async def commit(self) -> None:
+        return None
+
+
+def test_normalize_reports_a_github_failure() -> None:
+    body = (
+        '{"action": "opened", "repository": {"id": 1, "full_name": "a/b"},'
+        ' "installation": {"id": 1}, "pull_request": {"number": 1, "user": null, "body": null,'
+        ' "head": {"ref": "x"}, "labels": [], "created_at": "2026-01-01T00:00:00Z",'
+        ' "updated_at": "2026-01-01T00:00:00Z", "closed_at": null, "merged_at": null,'
+        ' "merge_commit_sha": null}}'
+    )
+    raw = RawWebhook(delivery_id="d", event="pull_request", repo_id=1, body=body)
+
+    @asynccontextmanager
+    async def open_source(settings: KafkaSettings) -> AsyncIterator[OneRecordSource]:
+        yield OneRecordSource(raw.model_dump_json().encode())
+
+    @asynccontextmanager
+    async def open_api(settings: GitHubSettings) -> AsyncIterator[FailingGitHubApi]:
+        yield FailingGitHubApi()
+
+    @asynccontextmanager
+    async def open_publisher(settings: KafkaSettings) -> AsyncIterator[FakePublisher]:
+        yield FakePublisher()
+
+    command = NormalizeCommand(KafkaSettings(), GITHUB, open_source, open_publisher, open_api)
+    failure = re.escape("GitHub API at https://api.github.com: HTTP 401")
+    with pytest.raises(CommandError, match=failure):
+        asyncio.run(command.run())
