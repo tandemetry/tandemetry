@@ -3,16 +3,20 @@
 Every event flows through Kafka; the attribution engine decides agent vs human; ClickHouse
 computes cohort metrics; Grafana and the API read from ClickHouse.
 
-Implemented so far: the unified event model, the Kafka publisher and the ClickHouse writer
-(event → `events.normalized` → `events`). The rest of the diagram is the v0.1 target; progress is
+Implemented so far: GitHub ingestion (webhook → `raw.github` → normalizer with the GitHub API →
+`events.normalized`), the unified event model and the ClickHouse writer (`events.normalized` →
+`events`). The rest of the diagram is the v0.1 target; progress is
 tracked in the [roadmap](roadmap.md).
 
 ```mermaid
 flowchart TB
-  GH[GitHub<br/>webhooks · REST API] --> WH[Webhook API<br/>FastAPI, signature check]
+  GH[GitHub<br/>webhooks · REST API] --> WH[Webhook API<br/>tandemetry serve, signature check]
   GH --> BF[Backfill worker<br/>history via GitHub API]
   AG[Coding agents<br/>OTel telemetry, optional] --> OC[OTel Collector]
   WH --> K[(Kafka<br/>raw + normalized events)]
+  K --> NZ[GitHub normalizer<br/>tandemetry normalize]
+  NZ -- files, commits --> GH
+  NZ --> K
   BF --> K
   OC --> K
   PG[(PostgreSQL<br/>orgs, repos, rules)] --> AT[Attribution engine<br/>YAML rules]
@@ -30,10 +34,11 @@ flowchart TB
 
 | Component | Responsibility |
 | --- | --- |
-| Webhook API | Receives GitHub webhooks, verifies HMAC signature, publishes raw events |
+| Webhook API | `tandemetry serve`: verifies the HMAC signature, publishes supported deliveries unchanged to `raw.github` |
+| GitHub normalizer | `tandemetry normalize`: `raw.github` → events, fetching files and commits from the GitHub API → `events.normalized` |
 | Backfill worker | Pulls history (PRs, commits, reviews, check runs) respecting rate limits; resumable |
 | Kafka | Topics `raw.github`, `events.normalized`, `events.attributed`; replay for re-attribution |
-| Attribution engine | Normalizes events, applies rules (`docs/attribution.md`), emits attributed events |
+| Attribution engine | Applies rules (`docs/attribution.md`) to normalized events, emits attributed events |
 | ClickHouse writer | `tandemetry consume`: `events.normalized` → `events`, commit after insert |
 | ClickHouse | `events` table (deduplicated by `event_id`) + materialized views for metrics |
 | PostgreSQL | Installations, repositories, attribution rules, settings |
@@ -88,8 +93,8 @@ its batch. A failed insert or commit stops the process without committing, so th
 delivered again and deduplicated as described above. A batch the sink always rejects therefore
 stops the consumer until the cause is fixed; a dead-letter topic is future work.
 
-**`occurred_at`** is the platform's timestamp of the fact (PR created/closed, committer date,
-review submitted, check completed, merged), never the time Tandemetry received it. Every mapper
+**`occurred_at`** is the platform's timestamp of the fact (PR `created_at`/`closed_at`, git
+committer date, review `submitted_at`, check `completed_at`, PR `merged_at`), never the time Tandemetry received it. Every mapper
 must pick the same timestamp for the same fact, or ids diverge.
 `edited` and `reopened` have no dedicated timestamp: they use the webhook's `updated_at` and come
 from webhooks only; backfill emits `opened` and `closed`.
@@ -100,14 +105,78 @@ holding the `full_name` at the time of the event.
 
 Check runs link to pull requests through `head_sha` → `commit.sha` → `commit.pull_request`.
 
+## GitHub ingestion
+
+```
+GitHub ─POST /webhooks/github─► serve ─► raw.github ─► normalize ─► events.normalized
+         401 bad signature       202 after Kafka ack      │ GitHub REST API (read-only)
+         204 unsupported event   key: repository id       │ files on merge, commits on push
+         400 malformed body                               ▼
+```
+
+**Receiver** (`tandemetry serve`, `POST /webhooks/github`, `GET /healthz`). It checks
+`X-Hub-Signature-256` (HMAC-SHA256 of the raw body, constant-time compare) before parsing
+anything. Events other than `pull_request`, `pull_request_review` and `check_run` (e.g. `ping`)
+get 204. A supported delivery is published to `raw.github` as `RawWebhook` (delivery id, event
+name, repository id, body unchanged), keyed by repository id; every action is kept, so the raw
+topic can be re-normalized after a mapper change. GitHub gets 202 only after Kafka acknowledged
+the message (`acks=all`), so an accepted delivery is never lost; a Kafka failure returns 503 and
+GitHub shows the delivery as failed, ready to redeliver. The receiver makes no GitHub API calls,
+so it answers well within GitHub's 10 s delivery timeout, and nothing logs bodies or headers.
+Bodies over `TANDEMETRY_API__MAX_BODY_BYTES` (25 MiB, GitHub's delivery cap) get 413 before they
+are read in full. Kafka's default message limit is 1 MB, so producers allow
+`TANDEMETRY_KAFKA__MAX_MESSAGE_BYTES` (32 MiB, room for the JSON-escaped body) and the
+`raw.github` topic is created with the same `max.message.bytes`.
+
+**Normalizer** (`tandemetry normalize`, consumer group `tandemetry-normalizer`) turns each raw
+delivery into events and publishes them to `events.normalized`, committing offsets after the
+whole batch is published:
+
+| Delivery | Events | GitHub API |
+| --- | --- | --- |
+| `pull_request` `opened` | `pull_request` + one `commit` per PR commit | `GET /repos/{repo}/pulls/{n}/commits` |
+| `pull_request` `synchronize` | one `commit` per PR commit | same |
+| `pull_request` `edited` / `reopened` / `closed` | `pull_request` | — |
+| `pull_request` `closed`, merged | `pull_request` + `merge` with changed files | `GET /repos/{repo}/pulls/{n}/files` |
+| `pull_request_review` `submitted` | `review` | — |
+| `check_run` `completed` | `check_run` | — |
+
+On every push all PR commits are fetched again; known commits get the same `event_id` and
+collapse downstream, so no state is needed. A deleted (ghost) author or reviewer produces no
+`pull_request`/`review` event; a merge is still recorded. File `patch` text is never read.
+The PR endpoints return at most 250 commits and 3000 files; larger PRs are incomplete until
+backfill covers them.
+
+Failures: a rate limit is waited out until the reset time (capped by
+`TANDEMETRY_GITHUB__RATE_LIMIT_MAX_WAIT_S`), a server error or timeout is retried with exponential
+backoff (`RETRY_INITIAL_S` doubling up to `RETRY_MAX_S`), and a delivery that is malformed or
+whose repository/PR is gone (404/410) is logged (delivery id and position, never the body) and
+skipped. Any other API error (e.g. 401 for a wrong App key) stops the worker without committing,
+like the ClickHouse writer, so nothing is lost while the cause is fixed. Waits within one batch
+are bounded by `TANDEMETRY_GITHUB__BATCH_DEADLINE_S` (100 minutes): a batch that would wait longer
+stops the worker without committing, and a restart (by the orchestrator) retries it, which is
+harmless because ids are stable. The deadline stays below the consumer's `max.poll.interval.ms`
+(2 hours, `TANDEMETRY_KAFKA__NORMALIZER_MAX_POLL_INTERVAL_MS`), so the group never evicts a
+waiting worker; a single rate-limit wait (at most an hour) always fits. Normalizers scale out up to the partition
+count of `raw.github`; each repository stays on one partition and keeps its order.
+
+**GitHub API client.** The App signs a JWT (RS256, `iss` = Client ID, valid 9 minutes, backdated
+60 s against clock skew) with its private key, exchanges it for an installation access token
+(`POST /app/installations/{id}/access_tokens`, about 1 h; this only mints a token and writes
+nothing to repositories) and caches the token per installation until 5 minutes before expiry.
+Requests send `X-GitHub-Api-Version: 2022-11-28`, page with `per_page=100` and follow the `Link`
+header. The only outbound host is `TANDEMETRY_GITHUB__API_URL` (default `https://api.github.com`;
+GitHub Enterprise Server uses `https://<host>/api/v3`). Backfill will reuse the client.
+
 ## Deployment
 
 - Local / trial: `docker compose up` (single node). Today `deploy/docker-compose.yml` runs the
   infrastructure (Kafka, ClickHouse, PostgreSQL, see [deploy/README.md](../deploy/README.md));
-  application services join it with the first runnable service.
+  application services join it as compose profile `app` (next roadmap item).
 - Production: Helm chart; consumers scaled by KEDA on Kafka consumer lag.
 
 ## Security
 
-GitHub App with read-only permissions; secrets via env/K8s secrets; no data leaves the
-customer's infrastructure.
+GitHub App with read-only permissions (`deploy/github-app/manifest.json`, setup in
+[github-app.md](github-app.md)); webhook secret and App private key via env/K8s secrets; no data
+leaves the customer's infrastructure.

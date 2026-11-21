@@ -1,19 +1,39 @@
 import argparse
 import asyncio
 import sys
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from contextlib import AbstractAsyncContextManager
 from importlib.metadata import version
 from typing import Protocol
 
+import uvicorn
 from aiokafka.errors import KafkaError
 from clickhouse_connect.driver.exceptions import Error as ClickHouseError
+from fastapi import FastAPI
 
+from tandemetry.api.app import create_app
 from tandemetry.events.consumer import EventConsumer
 from tandemetry.events.kafka import kafka_batch_source, kafka_event_publisher
 from tandemetry.events.ports import BatchSource, EventPublisher, EventSink
 from tandemetry.events.sample import SAMPLE_EVENT
-from tandemetry.settings import ClickHouseSettings, KafkaSettings, Settings
+from tandemetry.ingest.github.client import github_api
+from tandemetry.ingest.github.kafka import kafka_raw_webhook_publisher, kafka_raw_webhook_source
+from tandemetry.ingest.github.normalizer import WebhookNormalizer
+from tandemetry.ingest.github.ports import GitHubApi, GitHubApiError, RawWebhookPublisher
+from tandemetry.ingest.github.receiver import WebhookReceiver
+from tandemetry.ingest.github.signature import WebhookSignature
+from tandemetry.ingest.github.worker import (
+    NormalizerStalledError,
+    NormalizerWorker,
+    RetryPolicy,
+)
+from tandemetry.settings import (
+    ApiSettings,
+    ClickHouseSettings,
+    GitHubSettings,
+    KafkaSettings,
+    Settings,
+)
 from tandemetry.storage.clickhouse import (
     ClickHouseMigrator,
     clickhouse_client,
@@ -116,6 +136,89 @@ class ConsumeCommand:
             raise CommandError(f"ClickHouse at {address}: {error}") from error
 
 
+RawPublisherFactory = Callable[[KafkaSettings], AbstractAsyncContextManager[RawWebhookPublisher]]
+Serve = Callable[[FastAPI, ApiSettings], Awaitable[None]]
+
+
+async def serve_with_uvicorn(app: FastAPI, settings: ApiSettings) -> None:
+    """Serve the app until the process receives a stop signal."""
+    await uvicorn.Server(uvicorn.Config(app, host=settings.host, port=settings.port)).serve()
+
+
+class ServeCommand:
+    help = "receive GitHub webhooks onto the raw Kafka topic until stopped"
+
+    def __init__(
+        self,
+        api: ApiSettings,
+        github: GitHubSettings,
+        kafka: KafkaSettings,
+        open_publisher: RawPublisherFactory = kafka_raw_webhook_publisher,
+        serve: Serve = serve_with_uvicorn,
+    ) -> None:
+        self._api = api
+        self._github = github
+        self._kafka = kafka
+        self._open_publisher = open_publisher
+        self._serve = serve
+
+    async def run(self) -> None:
+        if not self._github.webhook_secret.get_secret_value():
+            raise CommandError("set TANDEMETRY_GITHUB__WEBHOOK_SECRET")
+        signature = WebhookSignature(self._github.webhook_secret)
+        try:
+            async with self._open_publisher(self._kafka) as publisher:
+                receiver = WebhookReceiver(signature, publisher)
+                await self._serve(create_app(receiver, self._api.max_body_bytes), self._api)
+        except KafkaError as error:
+            raise CommandError(f"Kafka at {self._kafka.bootstrap_servers}: {error}") from error
+
+
+ApiFactory = Callable[[GitHubSettings], AbstractAsyncContextManager[GitHubApi]]
+
+
+class NormalizeCommand:
+    help = "normalize raw GitHub webhooks into events until interrupted"
+
+    def __init__(
+        self,
+        kafka: KafkaSettings,
+        github: GitHubSettings,
+        open_source: SourceFactory = kafka_raw_webhook_source,
+        open_publisher: PublisherFactory = kafka_event_publisher,
+        open_api: ApiFactory = github_api,
+    ) -> None:
+        self._kafka = kafka
+        self._github = github
+        self._open_source = open_source
+        self._open_publisher = open_publisher
+        self._open_api = open_api
+
+    async def run(self) -> None:
+        if not self._github.client_id or not self._github.private_key.get_secret_value():
+            raise CommandError(
+                "set TANDEMETRY_GITHUB__CLIENT_ID and TANDEMETRY_GITHUB__PRIVATE_KEY"
+            )
+        retry = RetryPolicy(
+            self._github.retry_initial_s,
+            self._github.retry_max_s,
+            self._github.rate_limit_max_wait_s,
+            self._github.batch_deadline_s,
+        )
+        try:
+            async with (
+                self._open_api(self._github) as api,
+                self._open_publisher(self._kafka) as publisher,
+                self._open_source(self._kafka) as source,
+            ):
+                print(f"normalizing {self._kafka.raw_topic} as {self._kafka.normalizer_group}")
+                await NormalizerWorker(source, WebhookNormalizer(api), publisher, retry).run()
+        except KafkaError as error:
+            raise CommandError(f"Kafka at {self._kafka.bootstrap_servers}: {error}") from error
+        except (GitHubApiError, NormalizerStalledError) as error:
+            raise CommandError(f"GitHub API at {self._github.api_url}: {error}") from error
+
+
 class Cli:
     def __init__(
         self,
@@ -158,6 +261,8 @@ def main() -> None:
         "migrate": MigrateCommand(settings.clickhouse),
         "publish-sample": PublishSampleCommand(settings.kafka),
         "consume": ConsumeCommand(settings.kafka, settings.clickhouse),
+        "serve": ServeCommand(settings.api, settings.github, settings.kafka),
+        "normalize": NormalizeCommand(settings.kafka, settings.github),
     }
     cli = Cli(PackageVersionProvider(), settings, commands)
     raise SystemExit(cli.run())

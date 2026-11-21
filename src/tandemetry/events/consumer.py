@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from tandemetry.events.envelope import Event
 from tandemetry.events.ports import BatchSource, EventSink, Record
+from tandemetry.events.validation import describe
 
 logger = logging.getLogger(__name__)
 
@@ -34,17 +35,11 @@ class EventConsumer:
         try:
             return Event.model_validate_json(record.value)
         except ValidationError as error:
-            problems = "; ".join(
-                f"{'.'.join(map(str, problem['loc']))}: {problem['type']}"
-                for problem in error.errors(
-                    include_input=False, include_url=False, include_context=False
-                )
-            )
             logger.warning(
                 "invalid event at %s[%d]@%d: %s",
                 record.topic,
                 record.partition,
                 record.offset,
-                problems,
+                describe(error),
             )
             return None

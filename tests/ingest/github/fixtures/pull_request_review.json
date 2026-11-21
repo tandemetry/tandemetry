@@ -1,0 +1,15 @@
+{
+  "action": "submitted",
+  "review": {
+    "id": 80,
+    "user": {"login": "hubot", "id": 2},
+    "body": "Here is the body for the review.",
+    "state": "approved",
+    "commit_id": "ecdd80bb57125d7ba9641ffaa4d7d2c19d3f3091",
+    "submitted_at": "2019-11-17T17:43:43Z"
+  },
+  "pull_request": {"number": 1347, "title": "Amazing new feature"},
+  "repository": {"id": 1296269, "full_name": "octocat/Hello-World"},
+  "installation": {"id": 1},
+  "sender": {"login": "hubot", "id": 2}
+}

@@ -5,7 +5,7 @@ Requires Docker with Compose v2.17 or newer.
 
 This stack is infrastructure only. During development run the application on the host
 (`uv run …`) against these services; a Dockerfile and application services (compose profile
-`app`) are added with the first runnable service, see the roadmap.
+`app`) are the next roadmap item.
 
 ## Start
 
@@ -119,6 +119,45 @@ dc exec kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server kafka:9
 A reset is rejected while a consumer is running; after a hard kill wait about 10 s (the
 consumer's session timeout) for the group to become empty.
 
+## Receive GitHub webhooks
+
+Needs a GitHub App and its variables, see [docs/github-app.md](../docs/github-app.md). With the
+stack up and the ClickHouse variables exported, run three processes:
+
+```bash
+uv run tandemetry serve        # terminal 1: Uvicorn running on http://127.0.0.1:8000
+uv run tandemetry normalize    # terminal 2: normalizing raw.github as tandemetry-normalizer
+uv run tandemetry consume      # terminal 3: consuming events.normalized as tandemetry-clickhouse
+```
+
+Without GitHub, send a signed delivery yourself (`serve` only needs the webhook secret):
+
+```bash
+body='{"action":"opened","repository":{"id":1296269,"full_name":"octocat/Hello-World"}}'
+sig=$(printf '%s' "$body" | openssl dgst -sha256 -hmac "$TANDEMETRY_GITHUB__WEBHOOK_SECRET" | sed 's/^.* //')
+curl -i localhost:8000/webhooks/github -H 'X-GitHub-Event: pull_request' \
+  -H 'X-GitHub-Delivery: local-1' -H "X-Hub-Signature-256: sha256=$sig" --data-raw "$body"
+                                     # HTTP/1.1 202 Accepted
+curl -i localhost:8000/webhooks/github -H 'X-GitHub-Event: pull_request' \
+  -H 'X-Hub-Signature-256: sha256=00' --data-raw "$body"   # HTTP/1.1 401 Unauthorized
+dc exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:9092 \
+  --topic raw.github --from-beginning --max-messages 1 --formatter-property print.key=true
+```
+
+This body is too short for the normalizer: it logs `skipped delivery local-1 … pull_request…`
+and moves on. With the App installed, open a pull request on a test repository, push to it,
+review it and merge it, then:
+
+```bash
+dc exec clickhouse sh -c 'clickhouse-client --user "$CLICKHOUSE_USER" \
+  --password "$CLICKHOUSE_PASSWORD" -d "$CLICKHOUSE_DB" \
+  -q "SELECT type, count() FROM events FINAL GROUP BY type ORDER BY type"'
+dc exec kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server kafka:9092 \
+  --describe --group tandemetry-normalizer          # LAG 0 once everything is normalized
+```
+
+Redeliver a delivery from the App's **Advanced** page: the counts stay the same.
+
 ## Stop and reset
 
 ```bash
@@ -137,4 +176,11 @@ dc down -v     # stop and delete all data volumes
 - **Kafka data persists** in the `kafka-data` volume, so topics and messages survive restarts.
 - **Connecting to Kafka from the host on 9092 fails**: use `localhost:29092`.
 - **Memory**: give Docker Desktop at least 4 GB.
+- **Every webhook gets 401**: the secret differs from the App's, or something between GitHub and
+  `serve` re-encoded the body. The signature covers the exact bytes GitHub sent.
+- **`normalize` stops with `HTTP 401`**: wrong Client ID or private key, or the key was revoked.
+- **`normalize` stops with "batch not normalized within 6000s"**: GitHub stayed rate limited or
+  unavailable; start it again, the batch is retried.
+- **Large deliveries get 503 on an older stack**: `raw.github` was created before
+  `max.message.bytes` was set. Re-run `dc up -d --wait`; `kafka-init` applies the limit.
 - **`up --wait` errors on `kafka-init`**: update Docker Compose to v2.17 or newer.

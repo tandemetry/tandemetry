@@ -1,0 +1,23 @@
+[
+  {
+    "sha": "6dcb09b5b57875f334f61aebed695e2e4193db5e",
+    "commit": {
+      "author": {"name": "Monalisa Octocat", "email": "support@github.com", "date": "2011-04-14T16:00:49Z"},
+      "committer": {"name": "Monalisa Octocat", "email": "support@github.com", "date": "2011-04-14T18:30:49+02:00"},
+      "message": "Fix all the bugs",
+      "tree": {"sha": "6dcb09b5b57875f334f61aebed695e2e4193db5e"}
+    },
+    "author": {"login": "octocat", "id": 1},
+    "committer": {"login": "octocat", "id": 1}
+  },
+  {
+    "sha": "ce587453ced02b1526dfb4cb910479d431683101",
+    "commit": {
+      "author": {"name": "Claude", "email": "noreply@anthropic.com", "date": "2011-04-15T10:00:00Z"},
+      "committer": {"name": "Claude", "email": "noreply@anthropic.com", "date": "2011-04-15T10:00:00Z"},
+      "message": "Add tests\n\nCo-Authored-By: Claude <noreply@anthropic.com>"
+    },
+    "author": null,
+    "committer": null
+  }
+]

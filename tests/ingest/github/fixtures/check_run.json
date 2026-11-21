@@ -1,0 +1,15 @@
+{
+  "action": "completed",
+  "check_run": {
+    "id": 4,
+    "name": "test",
+    "head_sha": "ce587453ced02b1526dfb4cb910479d431683101",
+    "status": "completed",
+    "conclusion": "failure",
+    "started_at": "2018-05-04T01:14:52Z",
+    "completed_at": "2018-05-04T01:15:40Z",
+    "app": {"id": 2, "slug": "octoapp"}
+  },
+  "repository": {"id": 1296269, "full_name": "octocat/Hello-World"},
+  "installation": {"id": 1}
+}

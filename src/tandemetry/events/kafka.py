@@ -8,6 +8,8 @@ from tandemetry.events.envelope import Event
 from tandemetry.events.ports import Record
 from tandemetry.settings import KafkaSettings
 
+DEFAULT_MAX_POLL_INTERVAL_MS = 300_000
+
 
 class MessageSender(Protocol):
     async def send_and_wait(self, topic: str, value: bytes, key: bytes) -> object: ...
@@ -29,18 +31,26 @@ class KafkaEventPublisher:
 
 
 @asynccontextmanager
-async def kafka_event_publisher(settings: KafkaSettings) -> AsyncIterator[KafkaEventPublisher]:
-    """An event publisher to the configured Kafka topic, open for the duration of the block."""
+async def kafka_producer(settings: KafkaSettings) -> AsyncIterator[AIOKafkaProducer]:
+    """An idempotent producer acknowledged by all in-sync replicas, open for the block."""
     producer = AIOKafkaProducer(
         bootstrap_servers=settings.bootstrap_servers,
         acks="all",
         enable_idempotence=True,
+        max_request_size=settings.max_message_bytes,
     )
     try:
         await producer.start()
-        yield KafkaEventPublisher(producer, settings.events_topic)
+        yield producer
     finally:
         await producer.stop()
+
+
+@asynccontextmanager
+async def kafka_event_publisher(settings: KafkaSettings) -> AsyncIterator[KafkaEventPublisher]:
+    """An event publisher to the configured Kafka topic, open for the duration of the block."""
+    async with kafka_producer(settings) as producer:
+        yield KafkaEventPublisher(producer, settings.events_topic)
 
 
 class ConsumedMessage(Protocol):
@@ -86,13 +96,29 @@ class KafkaBatchSource:
 
 @asynccontextmanager
 async def kafka_batch_source(settings: KafkaSettings) -> AsyncIterator[KafkaBatchSource]:
-    """A batch source on the configured topic and consumer group, open for the block."""
+    """A batch source on the configured events topic and consumer group, open for the block."""
+    async with kafka_topic_source(
+        settings, settings.events_topic, settings.consumer_group
+    ) as source:
+        yield source
+
+
+@asynccontextmanager
+async def kafka_topic_source(
+    settings: KafkaSettings,
+    topic: str,
+    group_id: str,
+    max_poll_interval_ms: int = DEFAULT_MAX_POLL_INTERVAL_MS,
+) -> AsyncIterator[KafkaBatchSource]:
+    """A batch source on a topic and consumer group with manual commits, open for the block."""
     consumer = AIOKafkaConsumer(
-        settings.events_topic,
+        topic,
         bootstrap_servers=settings.bootstrap_servers,
-        group_id=settings.consumer_group,
+        group_id=group_id,
         enable_auto_commit=False,
         auto_offset_reset="earliest",
+        max_poll_interval_ms=max_poll_interval_ms,
+        max_partition_fetch_bytes=settings.max_message_bytes,
     )
     try:
         await consumer.start()
