@@ -121,14 +121,28 @@ consumer's session timeout) for the group to become empty.
 
 ## Receive GitHub webhooks
 
-Needs a GitHub App and its variables, see [docs/github-app.md](../docs/github-app.md). With the
-stack up and the ClickHouse variables exported, run three processes:
+Needs a GitHub App installed on the repositories and `~/.tandemetry.env`, see
+[docs/github-app.md](../docs/github-app.md). A session uses four terminals, each started from the
+repository root:
 
-```bash
-uv run tandemetry serve        # terminal 1: Uvicorn running on http://127.0.0.1:8000
-uv run tandemetry normalize    # terminal 2: normalizing raw.github as tandemetry-normalizer
-uv run tandemetry consume      # terminal 3: consuming events.normalized as tandemetry-clickhouse
-```
+| Terminal | Command | Ready when it prints |
+| --- | --- | --- |
+| 0 | `cloudflared tunnel --url http://localhost:8000` | `https://<random>.trycloudflare.com` |
+| 1 | `source ~/.tandemetry.env && uv run tandemetry migrate && uv run tandemetry serve` | `Uvicorn running on http://127.0.0.1:8000` |
+| 2 | `source ~/.tandemetry.env && uv run tandemetry normalize` | `normalizing raw.github as tandemetry-normalizer` |
+| 3 | `source ~/.tandemetry.env && uv run tandemetry consume` | `consuming events.normalized as tandemetry-clickhouse` |
+
+1. Start the stack (`dc up -d --wait`, see [Start](#start)).
+2. Start terminal 0 and copy the tunnel URL. The URL is new on every start: set the App's
+   **Webhook URL** (App settings → **General**) to `https://<random>.trycloudflare.com/webhooks/github`
+   and **Save changes**. Run one tunnel only.
+3. Start terminals 1–3. `normalize` and `consume` then wait silently for messages.
+4. App settings → **Advanced → Recent Deliveries** → `ping` → **Redeliver**: GitHub shows 204 and
+   terminal 1 logs `POST /webhooks/github … 204`.
+5. Work on an installed repository as usual (open a pull request, push, review, let CI run,
+   merge); deliveries of subscribed events get 202 (`ping` and `installation.*` get 204). Check the result with the queries below.
+
+Stop with Ctrl+C in each terminal, then `dc stop` or leave the stack running.
 
 Without GitHub, send a signed delivery yourself (`serve` only needs the webhook secret):
 
@@ -145,8 +159,7 @@ dc exec kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka:
 ```
 
 This body is too short for the normalizer: it logs `skipped delivery local-1 … pull_request…`
-and moves on. With the App installed, open a pull request on a test repository, push to it,
-review it and merge it, then:
+and moves on. With the App installed, check what arrived from GitHub:
 
 ```bash
 dc exec clickhouse sh -c 'clickhouse-client --user "$CLICKHOUSE_USER" \
@@ -154,9 +167,17 @@ dc exec clickhouse sh -c 'clickhouse-client --user "$CLICKHOUSE_USER" \
   -q "SELECT type, count() FROM events FINAL GROUP BY type ORDER BY type"'
 dc exec kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server kafka:9092 \
   --describe --group tandemetry-normalizer          # LAG 0 once everything is normalized
+dc exec kafka /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server kafka:9092 \
+  --describe --group tandemetry-clickhouse          # LAG 0 once everything is stored
 ```
 
-Redeliver a delivery from the App's **Advanced** page: the counts stay the same.
+Each completed CI job is one `check_run`, a submitted review one `review`, a merged pull request
+one `pull_request` and one `merge`; the full mapping is in
+[docs/github-app.md](../docs/github-app.md#5-check-deliveries).
+
+Redeliver any delivery from the App's **Advanced** page: the counts stay the same. The table
+briefly holds a second physical row with the same `event_id` (`SELECT count() FROM events`
+grows), which `FINAL` and the next background merge remove.
 
 ## Stop and reset
 
@@ -178,6 +199,16 @@ dc down -v     # stop and delete all data volumes
 - **Memory**: give Docker Desktop at least 4 GB.
 - **Every webhook gets 401**: the secret differs from the App's, or something between GitHub and
   `serve` re-encoded the body. The signature covers the exact bytes GitHub sent.
+- **`Authentication failed` for user `default`** from `migrate` or `consume`, or `normalize`
+  asking for `TANDEMETRY_GITHUB__CLIENT_ID`: this terminal has not run `source ~/.tandemetry.env`.
+- **The App's install page does not list a repository**: the repository belongs to an
+  organization and the App to your personal account; transfer the App, see
+  [docs/github-app.md](../docs/github-app.md#1-create-the-app).
+- **Deliveries fail right after restarting `cloudflared`**: the tunnel URL changed; update the
+  App's Webhook URL and **Redeliver**.
+- **An extra `pull_request` with no matching delivery**: an earlier `publish-sample` message.
+  It stays in `events.normalized` (the Kafka volume persists) and `consume` stores it like any
+  other event.
 - **`normalize` stops with `HTTP 401`**: wrong Client ID or private key, or the key was revoked.
 - **`normalize` stops with "batch not normalized within 6000s"**: GitHub stayed rate limited or
   unavailable; start it again, the batch is retried.
