@@ -10,8 +10,17 @@ read-only and in sync with the events Tandemetry handles.
 
 ## 1. Create the App
 
-GitHub → **Settings → Developer settings → GitHub Apps → New GitHub App** (for an organization:
-the organization's **Settings → Developer settings**). Fill in the values from the manifest:
+Create the App under the account that owns the repositories: a private App installs only on the
+account that owns it, so an App in your personal account cannot see an organization's
+repositories.
+
+- Personal repositories: GitHub → **Settings → Developer settings → GitHub Apps → New GitHub App**.
+- Organization repositories: the organization's **Settings → Developer settings → GitHub Apps →
+  New GitHub App**. An App already created in a personal account moves with App settings →
+  **Advanced → Transfer ownership** (needs organization owner rights); its Client ID, private key
+  and webhook secret stay the same.
+
+Fill in the values from the manifest:
 
 | Field | Value |
 | --- | --- |
@@ -32,17 +41,34 @@ After **Create GitHub App**:
 
 ## 2. Install the App
 
-App page → **Install App** → choose the account → **Only select repositories** → pick the
-repositories to analyse. Installing later on more repositories needs no Tandemetry change: each
-webhook carries its installation id.
+App settings → **Install App** → **Install** next to the owning account → **Only select
+repositories** → pick the repositories to analyse → **Install**. The permissions screen must show
+only **Read** access. Recent Deliveries then shows `installation.created`.
+
+Installing later on more repositories needs no Tandemetry change: each webhook carries its
+installation id. Webhooks cover activity from the moment of installation; earlier history comes
+from the backfill (see the [roadmap](roadmap.md)).
 
 ## 3. Configure Tandemetry
 
+Keep the variables in one file outside the repository, for example `~/.tandemetry.env`, and
+`source` it in every terminal that runs Tandemetry:
+
 ```bash
-export TANDEMETRY_GITHUB__WEBHOOK_SECRET=<webhook secret>      # serve
-export TANDEMETRY_GITHUB__CLIENT_ID=<client id>                # normalize
-export TANDEMETRY_GITHUB__PRIVATE_KEY="$(cat /secure/path/tandemetry.pem)"   # normalize
+cat > ~/.tandemetry.env <<'EOF'
+set -a; source /path/to/tandemetry/deploy/.env; set +a
+export TANDEMETRY_CLICKHOUSE__USERNAME="$CLICKHOUSE_USER"
+export TANDEMETRY_CLICKHOUSE__PASSWORD="$CLICKHOUSE_PASSWORD"
+export TANDEMETRY_CLICKHOUSE__DATABASE="$CLICKHOUSE_DB"
+export TANDEMETRY_GITHUB__WEBHOOK_SECRET='<webhook secret>'
+export TANDEMETRY_GITHUB__CLIENT_ID='<client id>'
+export TANDEMETRY_GITHUB__PRIVATE_KEY="$(cat /secure/path/tandemetry.pem)"
+EOF
+chmod 600 ~/.tandemetry.env
 ```
+
+The quoted `'EOF'` writes the lines as they are; `$CLICKHOUSE_*` and the key are read when the
+file is sourced. Exports typed directly into one terminal do not reach the others.
 
 | Variable | Default | Used by |
 | --- | --- | --- |
@@ -88,3 +114,19 @@ App settings → **Advanced → Recent Deliveries** lists each delivery with the
 
 **Redeliver** sends the same delivery again; it produces the same `event_id`s, so nothing is
 counted twice.
+
+Which deliveries become events:
+
+| Delivery | Event in ClickHouse |
+| --- | --- |
+| `pull_request.opened` | `pull_request`, plus one `commit` per pull request commit |
+| `pull_request.synchronize` (a push) | one `commit` per pull request commit |
+| `pull_request.closed` (merged) | `pull_request` and `merge` |
+| `pull_request.edited` / `reopened` / `closed` (not merged) | `pull_request` |
+| other `pull_request.*` (labeled, assigned, …) | none |
+| `pull_request_review.submitted` | `review` |
+| `check_run.completed` | `check_run` (`check_run.created` is skipped) |
+| `ping`, `installation.*` | none |
+
+Commits are read only when a pull request is opened or pushed to, so a pull request opened
+before the App was installed has no `commit` events until the backfill runs.
