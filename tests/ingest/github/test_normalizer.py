@@ -2,6 +2,8 @@ import asyncio
 from collections.abc import Callable, Sequence
 from typing import Any
 
+import pytest
+
 from tandemetry.events.envelope import Event
 from tandemetry.events.payloads import Commit, Merge, PullRequest, Review
 from tandemetry.ingest.github.normalizer import WebhookNormalizer
@@ -111,3 +113,45 @@ def test_unmerged_close_review_and_check_run_need_no_api_call(
 
 def test_unsupported_event_yields_nothing(make_raw: RawFactory, ping_payload: Payload) -> None:
     assert normalize(FakeGitHubApi([], []), make_raw("ping", ping_payload)) == []
+
+
+@pytest.mark.parametrize("action", ["labeled", "assigned"])
+def test_untracked_pull_request_action_yields_nothing(
+    make_raw: RawFactory, pull_request_payload: Payload, action: str
+) -> None:
+    pull_request_payload["action"] = action
+    api = FakeGitHubApi([], [])
+    assert normalize(api, make_raw("pull_request", pull_request_payload)) == []
+    assert api.calls == []
+
+
+def test_review_that_is_not_submitted_yields_nothing(
+    make_raw: RawFactory, review_payload: Payload
+) -> None:
+    review_payload["action"] = "dismissed"
+    assert normalize(FakeGitHubApi([], []), make_raw("pull_request_review", review_payload)) == []
+
+
+def test_check_run_that_is_not_completed_yields_nothing(
+    make_raw: RawFactory, check_run_payload: Payload
+) -> None:
+    check_run_payload["action"] = "created"
+    check_run_payload["check_run"]["conclusion"] = None
+    assert normalize(FakeGitHubApi([], []), make_raw("check_run", check_run_payload)) == []
+
+
+def test_event_ids_stay_pinned_for_the_fixtures(
+    make_raw: RawFactory,
+    pull_request_payload: Payload,
+    review_payload: Payload,
+    check_run_payload: Payload,
+) -> None:
+    api = FakeGitHubApi([], [])
+    opened = normalize(api, make_raw("pull_request", pull_request_payload))
+    review = normalize(api, make_raw("pull_request_review", review_payload))
+    check_run = normalize(api, make_raw("check_run", check_run_payload))
+    assert [str(event.event_id) for event in (*opened, *review, *check_run)] == [
+        "1af5abdf-8d00-50e9-abe0-6cf535ab1b20",
+        "98d7353d-aad6-507e-9624-2707e548d5a2",
+        "3a928817-6dbb-5f84-b1d7-8d369a99122b",
+    ]
