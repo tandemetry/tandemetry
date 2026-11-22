@@ -21,12 +21,9 @@ from tandemetry.ingest.github.kafka import kafka_raw_webhook_publisher, kafka_ra
 from tandemetry.ingest.github.normalizer import WebhookNormalizer
 from tandemetry.ingest.github.ports import GitHubApi, GitHubApiError, RawWebhookPublisher
 from tandemetry.ingest.github.receiver import WebhookReceiver
+from tandemetry.ingest.github.retry import GitHubRetry, GitHubStalledError, RetryPolicy
 from tandemetry.ingest.github.signature import WebhookSignature
-from tandemetry.ingest.github.worker import (
-    NormalizerStalledError,
-    NormalizerWorker,
-    RetryPolicy,
-)
+from tandemetry.ingest.github.worker import NormalizerWorker
 from tandemetry.settings import (
     ApiSettings,
     ClickHouseSettings,
@@ -199,11 +196,13 @@ class NormalizeCommand:
             raise CommandError(
                 "set TANDEMETRY_GITHUB__CLIENT_ID and TANDEMETRY_GITHUB__PRIVATE_KEY"
             )
-        retry = RetryPolicy(
-            self._github.retry_initial_s,
-            self._github.retry_max_s,
-            self._github.rate_limit_max_wait_s,
-            self._github.batch_deadline_s,
+        retry = GitHubRetry(
+            RetryPolicy(
+                self._github.retry_initial_s,
+                self._github.retry_max_s,
+                self._github.rate_limit_max_wait_s,
+                self._github.batch_deadline_s,
+            )
         )
         try:
             async with (
@@ -215,7 +214,7 @@ class NormalizeCommand:
                 await NormalizerWorker(source, WebhookNormalizer(api), publisher, retry).run()
         except KafkaError as error:
             raise CommandError(f"Kafka at {self._kafka.bootstrap_servers}: {error}") from error
-        except (GitHubApiError, NormalizerStalledError) as error:
+        except (GitHubApiError, GitHubStalledError) as error:
             raise CommandError(f"GitHub API at {self._github.api_url}: {error}") from error
 
 

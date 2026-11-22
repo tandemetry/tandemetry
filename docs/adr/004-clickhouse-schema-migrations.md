@@ -1,6 +1,6 @@
 # ADR-004: ClickHouse schema migrations as versioned SQL files
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-11-20
 
 ## Context

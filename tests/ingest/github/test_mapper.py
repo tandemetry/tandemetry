@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 
+from tandemetry.events.envelope import Event
 from tandemetry.events.payloads import (
     CheckConclusion,
     CheckRun,
@@ -20,6 +21,7 @@ from tandemetry.ingest.github.mapper import (
     commit_events,
     merge_event,
     parse_webhook,
+    pull_request_action,
     pull_request_event,
     review_event,
 )
@@ -35,8 +37,30 @@ def pull_request(payload: Payload) -> PullRequestWebhook:
     return PullRequestWebhook.model_validate(payload)
 
 
+def pull_request_fact(payload: Payload) -> Event | None:
+    webhook = pull_request(payload)
+    action = pull_request_action(webhook.action)
+    assert action is not None
+    return pull_request_event(webhook.repository, webhook.pull_request, action)
+
+
+def merge(payload: Payload, files: list[PullRequestFile]) -> Event:
+    webhook = pull_request(payload)
+    return merge_event(webhook.repository, webhook.pull_request, files)
+
+
+def review(payload: Payload) -> Event | None:
+    webhook = ReviewWebhook.model_validate(payload)
+    return review_event(webhook.repository, webhook.pull_request.number, webhook.review)
+
+
+def check_run(payload: Payload) -> Event:
+    webhook = CheckRunWebhook.model_validate(payload)
+    return check_run_event(webhook.repository, webhook.check_run)
+
+
 def test_opened_pull_request_maps_to_a_pull_request_fact(pull_request_payload: Payload) -> None:
-    event = pull_request_event(pull_request(pull_request_payload))
+    event = pull_request_fact(pull_request_payload)
     assert event is not None
     assert (event.repo_id, event.repo) == (1296269, "octocat/Hello-World")
     assert event.occurred_at == datetime(2011, 1, 26, 19, 1, 12, tzinfo=UTC)
@@ -63,7 +87,7 @@ def test_pull_request_action_picks_its_platform_timestamp(
 ) -> None:
     pull_request_payload["action"] = action
     pull_request_payload["pull_request"]["closed_at"] = "2011-01-28T09:00:00Z"
-    event = pull_request_event(pull_request(pull_request_payload))
+    event = pull_request_fact(pull_request_payload)
     assert event is not None
     assert event.occurred_at == occurred_at
     assert isinstance(event.payload, PullRequest)
@@ -73,34 +97,26 @@ def test_pull_request_action_picks_its_platform_timestamp(
 def test_closed_pull_request_without_closed_at_is_invalid(pull_request_payload: Payload) -> None:
     pull_request_payload["action"] = "closed"
     with pytest.raises(InvalidWebhookError, match="closed_at"):
-        pull_request_event(pull_request(pull_request_payload))
+        pull_request_fact(pull_request_payload)
 
 
 def test_missing_body_maps_to_empty_text(pull_request_payload: Payload) -> None:
     pull_request_payload["pull_request"]["body"] = None
-    event = pull_request_event(pull_request(pull_request_payload))
+    event = pull_request_fact(pull_request_payload)
     assert event is not None
     assert isinstance(event.payload, PullRequest)
     assert event.payload.body == ""
 
 
-@pytest.mark.parametrize("action", ["labeled", "synchronize", "assigned"])
-def test_other_pull_request_actions_have_no_pull_request_fact(
-    pull_request_payload: Payload, action: str
-) -> None:
-    pull_request_payload["action"] = action
-    assert pull_request_event(pull_request(pull_request_payload)) is None
-
-
 def test_deleted_author_has_no_pull_request_fact(pull_request_payload: Payload) -> None:
     pull_request_payload["pull_request"]["user"] = None
-    assert pull_request_event(pull_request(pull_request_payload)) is None
+    assert pull_request_fact(pull_request_payload) is None
 
 
 def test_merged_pull_request_maps_to_a_merge_with_its_files(
     merged_payload: Payload, files: list[PullRequestFile]
 ) -> None:
-    event = merge_event(pull_request(merged_payload), files)
+    event = merge(merged_payload, files)
     assert event.occurred_at == datetime(2011, 1, 28, 10, 0, tzinfo=UTC)
     assert event.payload == Merge(
         pull_request=1347,
@@ -115,13 +131,14 @@ def test_merged_pull_request_maps_to_a_merge_with_its_files(
 
 def test_merge_of_an_unmerged_pull_request_is_invalid(pull_request_payload: Payload) -> None:
     with pytest.raises(InvalidWebhookError, match="merged_at"):
-        merge_event(pull_request(pull_request_payload), [])
+        merge(pull_request_payload, [])
 
 
 def test_commits_map_to_commit_facts_timed_by_committer_date(
     pull_request_payload: Payload, commits: list[PullRequestCommit]
 ) -> None:
-    events = commit_events(pull_request(pull_request_payload), commits)
+    webhook = pull_request(pull_request_payload)
+    events = commit_events(webhook.repository, webhook.pull_request.number, commits)
     assert [event.occurred_at for event in events] == [
         datetime(2011, 4, 14, 16, 30, 49, tzinfo=UTC),
         datetime(2011, 4, 15, 10, 0, tzinfo=UTC),
@@ -145,24 +162,25 @@ def test_commits_map_to_commit_facts_timed_by_committer_date(
 
 
 def test_submitted_review_maps_to_a_review_fact(review_payload: Payload) -> None:
-    event = review_event(ReviewWebhook.model_validate(review_payload))
+    event = review(review_payload)
     assert event is not None
     assert event.occurred_at == datetime(2019, 11, 17, 17, 43, 43, tzinfo=UTC)
     assert event.payload == Review(review_id=80, pull_request=1347, reviewer="hubot")
 
 
-@pytest.mark.parametrize(("field", "value"), [("action", "dismissed"), ("user", None)])
-def test_dismissed_review_or_deleted_reviewer_has_no_fact(
-    review_payload: Payload, field: str, value: str | None
-) -> None:
-    target = review_payload if field == "action" else review_payload["review"]
-    target[field] = value
-    assert review_event(ReviewWebhook.model_validate(review_payload)) is None
+def test_deleted_reviewer_has_no_fact(review_payload: Payload) -> None:
+    review_payload["review"]["user"] = None
+    assert review(review_payload) is None
+
+
+def test_review_without_submitted_at_is_invalid(review_payload: Payload) -> None:
+    review_payload["review"]["submitted_at"] = None
+    with pytest.raises(InvalidWebhookError, match="submitted_at"):
+        review(review_payload)
 
 
 def test_completed_check_run_maps_to_a_check_run_fact(check_run_payload: Payload) -> None:
-    event = check_run_event(CheckRunWebhook.model_validate(check_run_payload))
-    assert event is not None
+    event = check_run(check_run_payload)
     assert event.occurred_at == datetime(2018, 5, 4, 1, 15, 40, tzinfo=UTC)
     assert event.payload == CheckRun(
         check_run_id=4,
@@ -172,15 +190,10 @@ def test_completed_check_run_maps_to_a_check_run_fact(check_run_payload: Payload
     )
 
 
-def test_check_run_that_is_not_completed_has_no_fact(check_run_payload: Payload) -> None:
-    check_run_payload["action"] = "created"
-    assert check_run_event(CheckRunWebhook.model_validate(check_run_payload)) is None
-
-
 def test_completed_check_run_without_conclusion_is_invalid(check_run_payload: Payload) -> None:
     check_run_payload["check_run"]["conclusion"] = None
     with pytest.raises(InvalidWebhookError, match="conclusion"):
-        check_run_event(CheckRunWebhook.model_validate(check_run_payload))
+        check_run(check_run_payload)
 
 
 def test_unsupported_event_parses_to_nothing(make_raw: RawFactory, ping_payload: Payload) -> None:
@@ -199,7 +212,7 @@ def test_wrong_shape_is_invalid_without_echoing_values(
 def test_invalid_sha_is_invalid_without_echoing_values(check_run_payload: Payload) -> None:
     check_run_payload["check_run"]["head_sha"] = "not-a-sha"
     with pytest.raises(InvalidWebhookError) as error:
-        check_run_event(CheckRunWebhook.model_validate(check_run_payload))
+        check_run(check_run_payload)
     assert "not-a-sha" not in str(error.value)
 
 
@@ -211,7 +224,18 @@ def test_redelivery_maps_to_the_same_event_id(
     )
     assert isinstance(first, PullRequestWebhook)
     assert isinstance(second, PullRequestWebhook)
-    first_event, second_event = pull_request_event(first), pull_request_event(second)
+    first_event, second_event = (
+        pull_request_event(webhook.repository, webhook.pull_request, PullRequestAction.OPENED)
+        for webhook in (first, second)
+    )
     assert first_event is not None
     assert second_event is not None
     assert first_event.event_id == second_event.event_id
+
+
+def test_only_tracked_webhook_actions_map_to_pull_request_actions() -> None:
+    assert [pull_request_action(action) for action in ("opened", "labeled", "synchronize")] == [
+        PullRequestAction.OPENED,
+        None,
+        None,
+    ]

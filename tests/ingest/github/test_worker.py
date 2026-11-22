@@ -13,15 +13,11 @@ from tandemetry.ingest.github.ports import (
     GitHubApiError,
     GitHubNotFoundError,
     GitHubRateLimitedError,
-    GitHubUnavailableError,
 )
 from tandemetry.ingest.github.raw import RawWebhook
 from tandemetry.ingest.github.rest import PullRequestCommit, PullRequestFile
-from tandemetry.ingest.github.worker import (
-    NormalizerStalledError,
-    NormalizerWorker,
-    RetryPolicy,
-)
+from tandemetry.ingest.github.retry import GitHubRetry, GitHubStalledError, RetryPolicy
+from tandemetry.ingest.github.worker import NormalizerWorker
 
 NOW = datetime(2026, 11, 21, 12, 0, tzinfo=UTC)
 RETRY = RetryPolicy(initial_s=1.0, max_s=4.0, rate_limit_max_wait_s=600.0, batch_deadline_s=900.0)
@@ -85,14 +81,8 @@ def run_once(
     records: Sequence[Record], api: ScriptedApi, sleeps: Sleeps | None = None
 ) -> tuple[int, FakeBatchSource, FakePublisher]:
     source, publisher = FakeBatchSource(records), FakePublisher()
-    worker = NormalizerWorker(
-        source,
-        WebhookNormalizer(api),
-        publisher,
-        RETRY,
-        sleep=sleeps or Sleeps(),
-        clock=lambda: NOW,
-    )
+    retry = GitHubRetry(RETRY, sleeps or Sleeps(), lambda: NOW)
+    worker = NormalizerWorker(source, WebhookNormalizer(api), publisher, retry)
     return asyncio.run(worker.run_once()), source, publisher
 
 
@@ -142,30 +132,13 @@ def test_rate_limit_is_waited_out_then_retried(opened: Record) -> None:
     assert (published, api.calls, sleeps.waits) == (1, 2, [90.0])
 
 
-def test_transient_failures_back_off_exponentially_up_to_the_cap(opened: Record) -> None:
-    sleeps = Sleeps()
-    api = ScriptedApi(*(GitHubUnavailableError("HTTP 502") for _ in range(4)))
-    published, _, _ = run_once([opened], api, sleeps)
-    assert (published, sleeps.waits) == (1, [1.0, 2.0, 4.0, 4.0])
-
-
 def test_other_api_failure_stops_without_commit(opened: Record) -> None:
     source, publisher = FakeBatchSource([opened]), FakePublisher()
-    worker = NormalizerWorker(
-        source, WebhookNormalizer(ScriptedApi(GitHubApiError("HTTP 401"))), publisher, RETRY
-    )
+    api = ScriptedApi(GitHubApiError("HTTP 401"))
+    worker = NormalizerWorker(source, WebhookNormalizer(api), publisher, GitHubRetry(RETRY))
     with pytest.raises(GitHubApiError, match="401"):
         asyncio.run(worker.run_once())
     assert (source.commits, publisher.published) == (0, [])
-
-
-@pytest.mark.parametrize(("until_reset", "wait"), [(-5.0, 1.0), (30.0, 30.0), (7200.0, 600.0)])
-def test_rate_limit_wait_is_clamped(until_reset: float, wait: float) -> None:
-    assert RETRY.rate_limit_wait(until_reset) == wait
-
-
-def test_backoff_stays_finite_after_many_attempts() -> None:
-    assert RETRY.backoff(10_000) == RETRY.max_s
 
 
 class AdvancingClock:
@@ -183,15 +156,11 @@ def test_batch_that_outlasts_its_deadline_stops_without_commit(opened: Record) -
     clock = AdvancingClock()
     rate_limits = (GitHubRateLimitedError(NOW + timedelta(days=1)) for _ in range(3))
     source, publisher = FakeBatchSource([opened, opened]), FakePublisher()
+    retry = GitHubRetry(RETRY, clock.sleep, clock)
     worker = NormalizerWorker(
-        source,
-        WebhookNormalizer(ScriptedApi(*rate_limits)),
-        publisher,
-        RETRY,
-        sleep=clock.sleep,
-        clock=clock,
+        source, WebhookNormalizer(ScriptedApi(*rate_limits)), publisher, retry
     )
-    with pytest.raises(NormalizerStalledError, match="900s"):
+    with pytest.raises(GitHubStalledError, match="900s"):
         asyncio.run(worker.run_once())
     assert clock.now == NOW + timedelta(seconds=600)
     assert source.commits == 0

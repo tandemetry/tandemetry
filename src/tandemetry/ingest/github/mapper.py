@@ -18,10 +18,12 @@ from tandemetry.events.validation import describe
 from tandemetry.ingest.github.raw import RawWebhook
 from tandemetry.ingest.github.rest import PullRequestCommit, PullRequestFile
 from tandemetry.ingest.github.webhooks import (
+    CheckRunData,
     CheckRunWebhook,
     PullRequestData,
     PullRequestWebhook,
     Repository,
+    ReviewData,
     ReviewWebhook,
 )
 
@@ -57,14 +59,14 @@ def parse_webhook(raw: RawWebhook) -> Webhook | None:
 
 
 @_validated
-def pull_request_event(webhook: PullRequestWebhook) -> Event | None:
-    """The pull request fact of a delivery; `None` for other actions or a deleted author."""
-    pull_request = webhook.pull_request
-    action = _pull_request_action(webhook.action)
-    if action is None or pull_request.user is None:
+def pull_request_event(
+    repository: Repository, pull_request: PullRequestData, action: PullRequestAction
+) -> Event | None:
+    """The pull request fact for an action; `None` for a deleted author."""
+    if pull_request.user is None:
         return None
     return _event(
-        webhook.repository,
+        repository,
         _pull_request_time(pull_request, action),
         PullRequest(
             number=pull_request.number,
@@ -78,13 +80,14 @@ def pull_request_event(webhook: PullRequestWebhook) -> Event | None:
 
 
 @_validated
-def merge_event(webhook: PullRequestWebhook, files: Sequence[PullRequestFile]) -> Event:
+def merge_event(
+    repository: Repository, pull_request: PullRequestData, files: Sequence[PullRequestFile]
+) -> Event:
     """The merge fact of a merged pull request with its changed files."""
-    pull_request = webhook.pull_request
     if pull_request.merged_at is None or pull_request.merge_commit_sha is None:
         raise InvalidWebhookError("pull_request: merged_at and merge_commit_sha are required")
     return _event(
-        webhook.repository,
+        repository,
         pull_request.merged_at,
         Merge(
             pull_request=pull_request.number,
@@ -98,15 +101,17 @@ def merge_event(webhook: PullRequestWebhook, files: Sequence[PullRequestFile]) -
 
 
 @_validated
-def commit_events(webhook: PullRequestWebhook, commits: Sequence[PullRequestCommit]) -> list[Event]:
+def commit_events(
+    repository: Repository, pull_request: int, commits: Sequence[PullRequestCommit]
+) -> list[Event]:
     """One commit fact per pull request commit, timed by the git committer date."""
     return [
         _event(
-            webhook.repository,
+            repository,
             commit.commit.committer.date,
             Commit(
                 sha=commit.sha,
-                pull_request=webhook.pull_request.number,
+                pull_request=pull_request,
                 author_login=commit.author.login if commit.author else None,
                 author_email=commit.commit.author.email,
                 message=commit.commit.message,
@@ -117,34 +122,26 @@ def commit_events(webhook: PullRequestWebhook, commits: Sequence[PullRequestComm
 
 
 @_validated
-def review_event(webhook: ReviewWebhook) -> Event | None:
-    """The review fact of a submitted review; `None` for other actions or a deleted reviewer."""
-    review = webhook.review
-    if webhook.action != "submitted" or review.user is None:
+def review_event(repository: Repository, pull_request: int, review: ReviewData) -> Event | None:
+    """The review fact of a submitted review; `None` for a deleted reviewer."""
+    if review.user is None:
         return None
     if review.submitted_at is None:
         raise InvalidWebhookError("review.submitted_at is required")
     return _event(
-        webhook.repository,
+        repository,
         review.submitted_at,
-        Review(
-            review_id=review.id,
-            pull_request=webhook.pull_request.number,
-            reviewer=review.user.login,
-        ),
+        Review(review_id=review.id, pull_request=pull_request, reviewer=review.user.login),
     )
 
 
 @_validated
-def check_run_event(webhook: CheckRunWebhook) -> Event | None:
-    """The check run fact of a completed check run; `None` for other actions."""
-    check_run = webhook.check_run
-    if webhook.action != "completed":
-        return None
+def check_run_event(repository: Repository, check_run: CheckRunData) -> Event:
+    """The check run fact of a completed check run."""
     if check_run.conclusion is None or check_run.completed_at is None:
         raise InvalidWebhookError("check_run: conclusion and completed_at are required")
     return _event(
-        webhook.repository,
+        repository,
         check_run.completed_at,
         CheckRun(
             check_run_id=check_run.id,
@@ -155,7 +152,8 @@ def check_run_event(webhook: CheckRunWebhook) -> Event | None:
     )
 
 
-def _pull_request_action(action: str) -> PullRequestAction | None:
+def pull_request_action(action: str) -> PullRequestAction | None:
+    """The tracked pull request action of a webhook action; `None` for untracked ones."""
     try:
         return PullRequestAction(action)
     except ValueError:
