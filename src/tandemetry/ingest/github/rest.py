@@ -1,6 +1,6 @@
 from pydantic import AwareDatetime, NonNegativeInt
 
-from tandemetry.ingest.github.webhooks import Account, GitHubModel
+from tandemetry.ingest.github.webhooks import Account, CheckRunData, GitHubModel
 
 
 class PullRequestFile(GitHubModel):
@@ -32,3 +32,7 @@ class PullRequestCommit(GitHubModel):
 class InstallationToken(GitHubModel):
     token: str
     expires_at: AwareDatetime
+
+
+class CheckRunsPage(GitHubModel):
+    check_runs: tuple[CheckRunData, ...]

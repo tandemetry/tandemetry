@@ -166,7 +166,11 @@ count of `raw.github`; each repository stays on one partition and keeps its orde
 nothing to repositories) and caches the token per installation until 5 minutes before expiry.
 Requests send `X-GitHub-Api-Version: 2022-11-28`, page with `per_page=100` and follow the `Link`
 header. The only outbound host is `TANDEMETRY_GITHUB__API_URL` (default `https://api.github.com`;
-GitHub Enterprise Server uses `https://<host>/api/v3`). Backfill will reuse the client.
+GitHub Enterprise Server uses `https://<host>/api/v3`). Each page fetches the cached token, so a
+long listing survives a token refresh. For the backfill the client reads only `GET` endpoints:
+`/repos/{repo}`, `/pulls?state=all&sort=updated&direction=desc` (paging stops at the first PR
+updated before `--since`), `/pulls/{n}/reviews`, `/pulls/{n}/commits`, `/pulls/{n}/files` and
+`/commits/{sha}/check-runs?filter=all` (every run, not only the latest per name).
 
 ## Deployment
 

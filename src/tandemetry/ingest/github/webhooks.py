@@ -30,6 +30,7 @@ class Label(GitHubModel):
 
 class Head(GitHubModel):
     ref: str
+    sha: str
 
 
 class PullRequestData(GitHubModel):
