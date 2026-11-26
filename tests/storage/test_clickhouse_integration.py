@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 from collections.abc import Sequence
 
@@ -14,8 +15,8 @@ pytestmark = pytest.mark.integration
 async def migrate_twice_and_write_twice(
     settings: ClickHouseSettings, event: Event
 ) -> list[Sequence[object]]:
-    await MigrateCommand(settings).run()
-    await MigrateCommand(settings).run()
+    await MigrateCommand(settings).run(argparse.Namespace())
+    await MigrateCommand(settings).run(argparse.Namespace())
     async with clickhouse_client(settings) as client:
         store = ClickHouseEventStore(client)
         await store.write([event])
