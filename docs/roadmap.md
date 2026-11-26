@@ -18,7 +18,8 @@
 ## Week 4 (Nov 22–28): ingestion
 - [x] GitHub App manifest (read-only) + webhook receiver with signature verification, normalizer
   with GitHub API client (`raw.github` → `events.normalized`) (#28); live-checked on this repository
-- [x] Backfill via GitHub API with rate-limit handling, resumable via `--since` (#31)
+- [x] Backfill via GitHub API with rate-limit handling, resumable via `--since` (#31: #32, #33);
+  live-checked on this repository (23 PRs, re-runs add no duplicates)
 - [ ] Dockerfile and application services in `deploy/docker-compose.yml` (profile `app`)
 - [ ] Apache DevLake and Middleware: document gaps for agent analytics from their docs
   (closes the Nov 7 kill/continue criterion)

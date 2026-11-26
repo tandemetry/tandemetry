@@ -179,6 +179,19 @@ Redeliver any delivery from the App's **Advanced** page: the counts stay the sam
 briefly holds a second physical row with the same `event_id` (`SELECT count() FROM events`
 grows), which `FINAL` and the next background merge remove.
 
+## Backfill history
+
+Pull requests from before the installation come from `tandemetry backfill`, which needs only the
+stack and `consume` (no tunnel, `serve` or `normalize`):
+
+```bash
+uv run tandemetry backfill --installation <id> --repo <owner/name>   # needs ~/.tandemetry.env
+```
+
+Then run the ClickHouse query above: `commit` and `merge` now cover the history, and running the
+backfill again leaves the counts unchanged. Details and resuming:
+[docs/github-app.md](../docs/github-app.md#6-backfill-history).
+
 ## Stop and reset
 
 ```bash
