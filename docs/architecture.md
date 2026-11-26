@@ -201,9 +201,10 @@ request are not read.
 
 ## Deployment
 
-- Local / trial: `docker compose up` (single node). Today `deploy/docker-compose.yml` runs the
-  infrastructure (Kafka, ClickHouse, PostgreSQL, see [deploy/README.md](../deploy/README.md));
-  application services join it as compose profile `app` (next roadmap item).
+- Local / trial: `docker compose up` (single node). `deploy/docker-compose.yml` runs the
+  infrastructure (Kafka, ClickHouse, PostgreSQL); with profile `app` it also runs `migrate`,
+  `serve`, `normalize` and `consume` from the repository's `Dockerfile`, see
+  [deploy/README.md](../deploy/README.md).
 - Production: Helm chart; consumers scaled by KEDA on Kafka consumer lag.
 
 ## Security

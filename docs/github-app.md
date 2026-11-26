@@ -70,6 +70,11 @@ chmod 600 ~/.tandemetry.env
 The quoted `'EOF'` writes the lines as they are; `$CLICKHOUSE_*` and the key are read when the
 file is sourced. Exports typed directly into one terminal do not reach the others.
 
+Running in containers (compose profile `app`) needs only the three `TANDEMETRY_GITHUB__*` values,
+in `deploy/app.env` as plain `KEY=value` lines; Compose does not run shell, so `export` and
+`$(cat …)` do not work there. See
+[deploy/README.md](../deploy/README.md#run-the-pipeline-in-containers).
+
 | Variable | Default | Used by |
 | --- | --- | --- |
 | `TANDEMETRY_API__HOST` / `TANDEMETRY_API__PORT` | `127.0.0.1` / `8000` | `serve` |
