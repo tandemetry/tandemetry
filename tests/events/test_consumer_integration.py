@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 
 import pytest
@@ -79,7 +80,7 @@ def test_redelivered_event_is_stored_once(
     clickhouse_settings: ClickHouseSettings,
     event: Event,
 ) -> None:
-    asyncio.run(MigrateCommand(clickhouse_settings).run())
+    asyncio.run(MigrateCommand(clickhouse_settings).run(argparse.Namespace()))
     asyncio.run(publish(kafka_settings, event))
 
     assert asyncio.run(consume(kafka_settings, clickhouse_settings, expected=1)) == 1

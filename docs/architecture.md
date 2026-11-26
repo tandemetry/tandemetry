@@ -144,8 +144,8 @@ whole batch is published:
 On every push all PR commits are fetched again; known commits get the same `event_id` and
 collapse downstream, so no state is needed. A deleted (ghost) author or reviewer produces no
 `pull_request`/`review` event; a merge is still recorded. File `patch` text is never read.
-The PR endpoints return at most 250 commits and 3000 files; larger PRs are incomplete until
-backfill covers them.
+The PR endpoints return at most 250 commits and 3000 files; larger PRs stay incomplete, also
+after a backfill, which reads the same endpoints.
 
 Failures: a rate limit is waited out until the reset time (capped by
 `TANDEMETRY_GITHUB__RATE_LIMIT_MAX_WAIT_S`), a server error or timeout is retried with exponential
@@ -171,6 +171,33 @@ long listing survives a token refresh. For the backfill the client reads only `G
 `/repos/{repo}`, `/pulls?state=all&sort=updated&direction=desc` (paging stops at the first PR
 updated before `--since`), `/pulls/{n}/reviews`, `/pulls/{n}/commits`, `/pulls/{n}/files` and
 `/commits/{sha}/check-runs?filter=all` (every run, not only the latest per name).
+
+**Backfill** (`tandemetry backfill --installation <id> --repo <owner/name> [--since <ISO date>]`)
+publishes the history of one repository straight to `events.normalized`, for pull requests opened
+before the App was installed. It lists pull requests updated at or after `--since` (a date or
+time; without a zone it is UTC) and publishes them least recently updated first:
+
+| Pull request | Events | GitHub API |
+| --- | --- | --- |
+| every one | `pull_request` `opened` + one `commit` per PR commit | `/pulls/{n}/commits` |
+| closed | `pull_request` `closed` | — |
+| merged | `merge` with changed files | `/pulls/{n}/files` |
+| submitted reviews | `review` (pending ones skipped) | `/pulls/{n}/reviews` |
+| completed check runs of the head commit | `check_run` | `/commits/{sha}/check-runs` |
+
+The mappers are the ones the normalizer uses, so each fact gets the `event_id` its webhook would
+have, and webhook/backfill overlap collapses in the sinks. The payload may differ: a backfilled
+`opened` carries the pull request's current body, labels and head branch, not those at opening,
+and `events` (`ReplacingMergeTree`, no version column) keeps the row inserted last. So backfill
+history before the installation (`--since` up to the install date) rather than again over periods
+webhooks already covered. `edited`/`reopened` are not reconstructed. After each pull request is fully published the command prints
+`backfilled #N (k events); resume with --since <updated_at>` (or `skipped #N; …` for one that
+could not be read): an interrupted run restarts from
+the last printed time and repeats at most that one pull request, which is harmless. Rate limits
+and server errors are retried as in the normalizer, bounded per pull request by
+`TANDEMETRY_GITHUB__BATCH_DEADLINE_S`; a pull request that is gone (404/410) or malformed is
+logged and skipped; any other API error stops the run. Check runs of earlier commits of a pull
+request are not read.
 
 ## Deployment
 

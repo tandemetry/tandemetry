@@ -47,7 +47,7 @@ only **Read** access. Recent Deliveries then shows `installation.created`.
 
 Installing later on more repositories needs no Tandemetry change: each webhook carries its
 installation id. Webhooks cover activity from the moment of installation; earlier history comes
-from the backfill (see the [roadmap](roadmap.md)).
+from the [backfill](#6-backfill-history).
 
 ## 3. Configure Tandemetry
 
@@ -129,4 +129,38 @@ Which deliveries become events:
 | `ping`, `installation.*` | none |
 
 Commits are read only when a pull request is opened or pushed to, so a pull request opened
-before the App was installed has no `commit` events until the backfill runs.
+before the App was installed has no `commit` events until the [backfill](#6-backfill-history)
+runs.
+
+## 6. Backfill history
+
+Pull requests from before the installation have no events until they are backfilled. Find the
+installation id: App settings → **Install App** → the gear next to the account; the page URL ends
+in `/installations/<id>` (deliveries also carry it as `installation.id`). With Kafka running and
+`tandemetry consume` writing to ClickHouse:
+
+```bash
+source ~/.tandemetry.env
+uv run tandemetry backfill --installation <id> --repo <owner/name> --since 2026-01-01
+```
+
+Each pull request prints a line when its events are published:
+
+```
+backfilled #12 (9 events); resume with --since 2026-03-04T10:15:00+00:00
+backfill of owner/name done
+```
+
+Leave out `--since` to read the whole history. If the run stops (Ctrl-C, network, an API error),
+start it again with the `--since` from the last printed line. Running it again over the same
+range is safe: events keep their `event_id` and ClickHouse keeps one copy. That copy is the last
+one written, and a backfilled `opened` carries the pull request's current body, labels and
+branch, so pick a `--since` that covers the time before the installation and avoid re-running
+over periods webhooks already recorded. A line `skipped #N; …` means the pull request was gone or
+malformed (the log says why); the run goes on. Check the result:
+
+```bash
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env exec clickhouse \
+  sh -c 'clickhouse-client --user "$CLICKHOUSE_USER" --password "$CLICKHOUSE_PASSWORD" \
+  -d "$CLICKHOUSE_DB" -q "SELECT type, count() FROM events FINAL GROUP BY type ORDER BY type"'
+```
