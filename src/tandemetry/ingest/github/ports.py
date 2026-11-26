@@ -4,6 +4,7 @@ from typing import Protocol
 
 from tandemetry.ingest.github.raw import RawWebhook
 from tandemetry.ingest.github.rest import PullRequestCommit, PullRequestFile
+from tandemetry.ingest.github.webhooks import CheckRunData, PullRequestData, Repository, ReviewData
 
 
 class GitHubApiError(Exception):
@@ -36,6 +37,24 @@ class GitHubApi(Protocol):
         self, installation_id: int, repo: str, number: int
     ) -> Sequence[PullRequestCommit]:
         """Every commit of a pull request."""
+
+
+class GitHubHistoryApi(GitHubApi, Protocol):
+    async def repository(self, installation_id: int, repo: str) -> Repository:
+        """The repository named `owner/name`."""
+
+    async def pull_requests(
+        self, installation_id: int, repo: str, since: datetime | None
+    ) -> Sequence[PullRequestData]:
+        """Pull requests in any state updated at or after `since`, most recently updated first."""
+
+    async def pull_request_reviews(
+        self, installation_id: int, repo: str, number: int
+    ) -> Sequence[ReviewData]:
+        """Every review of a pull request."""
+
+    async def check_runs(self, installation_id: int, repo: str, sha: str) -> Sequence[CheckRunData]:
+        """Every check run of a commit, including reruns."""
 
 
 class RawWebhookPublisher(Protocol):

@@ -261,7 +261,7 @@ def test_normalize_reports_a_github_failure() -> None:
     body = (
         '{"action": "opened", "repository": {"id": 1, "full_name": "a/b"},'
         ' "installation": {"id": 1}, "pull_request": {"number": 1, "user": null, "body": null,'
-        ' "head": {"ref": "x"}, "labels": [], "created_at": "2026-01-01T00:00:00Z",'
+        ' "head": {"ref": "x", "sha": "abc"}, "labels": [], "created_at": "2026-01-01T00:00:00Z",'
         ' "updated_at": "2026-01-01T00:00:00Z", "closed_at": null, "merged_at": null,'
         ' "merge_commit_sha": null}}'
     )
