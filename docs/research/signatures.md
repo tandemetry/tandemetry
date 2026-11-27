@@ -65,7 +65,7 @@ Claude Code trailers carry a model name in the display name (`Claude Opus 5.5`,
 coding agent, Devin, Cursor, Codex) plus Jules and Open SWE have at least one high-confidence,
 machine-readable signature, and agent trailers appear in 15 of 22 sampled repositories. The
 "signatures found" half of the criterion holds. The other half (DevLake and Middleware lacking
-agent attribution) is a separate item and is not covered here.
+agent attribution) is checked in [devlake-middleware.md](devlake-middleware.md).
 
 ## Limitations
 

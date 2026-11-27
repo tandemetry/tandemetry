@@ -13,7 +13,10 @@ merge rate, reverts, rework, CI failures, review load, cost per PR.
   Which agent works best *in our codebase*? Is review load growing?
 - Existing tools: paid engineering-intelligence platforms (LinearB, Swarmia, Jellyfish, DX, Faros)
   are expensive and built for human activity; GitHub's own metrics cover only Copilot;
-  Apache DevLake is heavy and Copilot-only for AI; Faros Community Edition was removed.
+  Apache DevLake reads AI usage and spend from vendor APIs (Copilot, Cursor, Claude Code, Kiro)
+  but does not attribute PRs to agents from the repository or compare outcomes per agent;
+  Middleware covers DORA only, with no AI-tool data ([research](research/devlake-middleware.md));
+  Faros Community Edition was removed.
 
 ## Users
 
