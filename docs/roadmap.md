@@ -21,8 +21,8 @@
 - [x] Backfill via GitHub API with rate-limit handling, resumable via `--since` (#31: #32, #33);
   live-checked on this repository (23 PRs, re-runs add no duplicates)
 - [x] Dockerfile and application services in `deploy/docker-compose.yml` (profile `app`) (#38)
-- [ ] Apache DevLake and Middleware: document gaps for agent analytics from their docs
-  (closes the Nov 7 kill/continue criterion)
+- [x] Apache DevLake and Middleware: document gaps for agent analytics from their docs
+  (closes the Nov 7 kill/continue criterion) (#40)
 
 ## Week 5 (Nov 29–Dec 5): core
 - [ ] Attribution engine with YAML rules + tests on real PRs
@@ -45,8 +45,8 @@
 GitLab → Azure DevOps → Bitbucket adapters; own UI; optional LLM features (BYOK); hosted version.
 
 ## Kill / continue criteria
-| Date | Continue if | Otherwise |
-| --- | --- | --- |
-| Nov 7 | DevLake/Middleware lack agent attribution; signatures found in real PRs | refocus or fallback idea |
-| Dec 31 | report published, measurable reaction | rethink positioning |
-| Jan 31, 2027 | 5+ teams installed or 3+ issues from strangers | finish as portfolio case |
+| Date | Continue if | Otherwise | Outcome |
+| --- | --- | --- | --- |
+| Nov 7 | DevLake/Middleware lack agent attribution; signatures found in real PRs | refocus or fallback idea | Continue (2026-11-27, [research](research/devlake-middleware.md)) |
+| Dec 31 | report published, measurable reaction | rethink positioning |  |
+| Jan 31, 2027 | 5+ teams installed or 3+ issues from strangers | finish as portfolio case |  |
