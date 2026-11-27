@@ -1,6 +1,69 @@
 name: tandemetry
 
+x-app: &app
+  image: tandemetry:dev
+  build:
+    context: ..
+    dockerfile: Dockerfile
+  profiles: [app]
+  init: true
+  stop_signal: SIGINT
+  restart: on-failure:3
+  environment: &app-environment
+    TANDEMETRY_KAFKA__BOOTSTRAP_SERVERS: kafka:9092
+    TANDEMETRY_CLICKHOUSE__HOST: clickhouse
+    TANDEMETRY_CLICKHOUSE__USERNAME: ${CLICKHOUSE_USER:?set in deploy/.env}
+    TANDEMETRY_CLICKHOUSE__PASSWORD: ${CLICKHOUSE_PASSWORD:?set in deploy/.env}
+    TANDEMETRY_CLICKHOUSE__DATABASE: ${CLICKHOUSE_DB:?set in deploy/.env}
+
+x-github-secrets: &github-secrets
+  env_file:
+    - path: app.env
+      required: false
+
 services:
+  migrate:
+    <<: *app
+    command: migrate
+    restart: "no"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+
+  serve:
+    <<: [*app, *github-secrets]
+    command: serve
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      <<: *app-environment
+      TANDEMETRY_API__HOST: 0.0.0.0
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  normalize:
+    <<: [*app, *github-secrets]
+    command: normalize
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+
+  consume:
+    <<: *app
+    command: consume
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      migrate:
+        condition: service_completed_successfully
+
   kafka:
     image: apache/kafka:4.4.0
     ports:

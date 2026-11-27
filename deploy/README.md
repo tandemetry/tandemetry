@@ -1,11 +1,11 @@
 # Local stack
 
 Single-node Kafka (KRaft), ClickHouse and PostgreSQL 17 for local development.
-Requires Docker with Compose v2.17 or newer.
+Requires Docker with Compose v2.24 or newer.
 
-This stack is infrastructure only. During development run the application on the host
-(`uv run …`) against these services; a Dockerfile and application services (compose profile
-`app`) are the next roadmap item.
+A plain `up` starts the infrastructure only. The application runs either on the host
+(`uv run …`, the sections below) or in containers with compose profile `app`, see
+[Run the pipeline in containers](#run-the-pipeline-in-containers). Use one of the two at a time.
 
 ## Start
 
@@ -192,11 +192,44 @@ Then run the ClickHouse query above: `commit` and `merge` now cover the history,
 backfill again leaves the counts unchanged. Details and resuming:
 [docs/github-app.md](../docs/github-app.md#6-backfill-history).
 
+## Run the pipeline in containers
+
+Profile `app` runs the same commands from the `tandemetry:dev` image (built from the repository's
+`Dockerfile`): `migrate` once, then `serve`, `normalize` and `consume`. They reach Kafka and
+ClickHouse by service name and take the ClickHouse credentials from `deploy/.env`, so no terminal
+needs `source`. The GitHub App settings go in `deploy/app.env` (git-ignored, read by `serve` and
+`normalize` only):
+
+```bash
+cp deploy/app.env.example deploy/app.env       # then set the webhook secret and Client ID
+printf 'TANDEMETRY_GITHUB__PRIVATE_KEY="%s"\n' "$(cat /secure/path/tandemetry.pem)" >> deploy/app.env
+chmod 600 deploy/app.env
+
+dc --profile app up -d --build --wait
+dc --profile app ps -a      # migrate Exited (0), serve healthy, normalize and consume Up
+dc logs -f normalize consume
+```
+
+The tunnel stays on the host (`cloudflared tunnel --url http://localhost:8000`) and the rest of
+[Receive GitHub webhooks](#receive-github-webhooks) applies unchanged: the signed `curl` gets 202
+and the ClickHouse and consumer-group queries show the result. Set the secret for that `curl`
+from the file: `export $(grep WEBHOOK_SECRET deploy/app.env)`.
+
+Backfill with the image (the `normalize` service carries the GitHub settings):
+
+```bash
+dc --profile app run --rm normalize backfill --installation <id> --repo <owner/name>
+```
+
+After a code change rebuild with `--build`; after editing `deploy/app.env` run `up -d` again, which
+recreates the containers (`restart` keeps the old environment).
+
 ## Stop and reset
 
 ```bash
-dc down        # stop, keep data
-dc down -v     # stop and delete all data volumes
+dc --profile app down    # stop the application containers too
+dc down                  # stop, keep data
+dc down -v               # stop and delete all data volumes
 ```
 
 ## Pitfalls
@@ -227,4 +260,12 @@ dc down -v     # stop and delete all data volumes
   unavailable; start it again, the batch is retried.
 - **Large deliveries get 503 on an older stack**: `raw.github` was created before
   `max.message.bytes` was set. Re-run `dc up -d --wait`; `kafka-init` applies the limit.
-- **`up --wait` errors on `kafka-init`**: update Docker Compose to v2.17 or newer.
+- **`up --wait` errors on `kafka-init`, or `env_file` is rejected**: update Docker Compose to
+  v2.24 or newer.
+- **`serve` container exits with "address already in use"**: a host `uv run tandemetry serve`
+  holds port 8000. Stop the host processes before `--profile app up`; host and container
+  `normalize` / `consume` would also share a consumer group and split the partitions.
+- **`normalize` container stops with `HTTP 401` or a key error**: the private key in
+  `deploy/app.env` lost its newlines. Write it with the `printf` line above (double quotes).
+- **`serve` or `normalize` restarts three times and stops**: `deploy/app.env` is missing or
+  incomplete; `dc logs serve normalize` names the variable.

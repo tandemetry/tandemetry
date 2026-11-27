@@ -24,11 +24,18 @@ jobs:
 
   compose:
     runs-on: ubuntu-latest
+    env:
+      COMPOSE: docker compose -f deploy/docker-compose.yml --env-file deploy/.env
     steps:
       - uses: actions/checkout@v7
       - run: cp deploy/.env.example deploy/.env
-      - run: docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --wait
-      - run: docker compose -f deploy/docker-compose.yml --env-file deploy/.env down -v
+      - run: $COMPOSE --profile app config --quiet
+      - run: $COMPOSE --profile app build
+      - run: docker run --rm tandemetry:dev --version
+      - run: test "$(docker run --rm --entrypoint id tandemetry:dev -u)" != 0
+      - run: $COMPOSE up -d --wait
+      - run: $COMPOSE --profile app up -d --wait migrate consume
+      - run: $COMPOSE --profile app down -v
         if: always()
 
   gitleaks:
